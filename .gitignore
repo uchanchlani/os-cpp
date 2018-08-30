@@ -34,3 +34,5 @@ __MACOSX
 *.exe
 *.out
 *.app
+
+*.elf
