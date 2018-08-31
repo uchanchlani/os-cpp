@@ -34,3 +34,7 @@ __MACOSX
 *.exe
 *.out
 *.app
+
+# Intellij files
+.idea/
+*.iml
