@@ -3,7 +3,7 @@ GCC_OPTIONS = -m32 -nostdlib -fno-builtin -nostartfiles -nodefaultlibs -fno-exce
 all: kernel.elf
 
 clean:
-	rm -f *.o *.bin
+	rm -f *.o *.bin *.elf
 
 # ==== KERNEL ENTRY POINT ====
 
