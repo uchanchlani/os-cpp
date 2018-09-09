@@ -38,11 +38,16 @@
 /* C o n t F r a m e   P o o l  */
 /*--------------------------------------------------------------------------*/
 
+class PoolManager;
+
 class ContFramePool {
     
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
-    
+
+    static PoolManager * pool_manager;
+    void release_pool_frames(unsigned long _first_frame_no);
+
 public:
 
     // The frame size is the same as the page size, duh...    
@@ -116,4 +121,22 @@ public:
      The exact number is computed in this function..
      */
 };
+
+class PoolManager {
+private:
+    unsigned long base_frame;
+    unsigned long n_frames;
+    ContFramePool * curr_pool
+    PoolManager * next;
+
+public:
+    PoolManager(unsigned long _base_frame,
+                unsigned long _n_frames,
+                ContFramePool * _curr_pool);
+
+
+ 
+    ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
+}
+
 #endif

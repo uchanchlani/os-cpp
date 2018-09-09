@@ -149,10 +149,18 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
     assert(false);
 }
 
+void ContFramePool::release_pool_frames(unsigned long _first_frame_no)
+{
+
+}
+
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
+    ContFramePool * curr_pool = pool_manager->get_pool_for_frames(_first_frame_no);
+    if (curr_pool == NULL) {
+        Console::puts("Error, Pool Manager for frame not found\n");
+    }
+    curr_pool->release_pool_frames(_first_frame_no);
 }
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
@@ -160,3 +168,25 @@ unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
     // TODO: IMPLEMENTATION NEEEDED!
     assert(false);
 }
+
+PoolManager::PoolManager(unsigned long _base_frame,
+                         unsigned long _n_frames,
+                         ContFramePool * _curr_pool)
+{
+    base_frame = _base_frame;
+    n_frame = _n_frame;
+    curr_pool = _curr_pool;
+    next = NULL;
+}
+
+ContFramePool * PoolManager::get_pool_for_frame(unsigned long _curr_frame)
+{
+    if (_curr_frame >= base_frame && _curr_frame < (base_frame + n_frames)) {
+        return curr_pool;
+    } else if (next != NULL) {
+        return next->get_pool_for_frame(_curr_frame);
+    } else {
+        return NULL;
+    }
+}
+
