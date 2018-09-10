@@ -149,7 +149,7 @@ void ContFramePool::release_pool_frames(unsigned long start_frame)
     unsigned long size = 1;
     start_frame++;
     while(true) {
-        unsigned short curr_size = get_first_non_follow_frame(bitmap[start_frame / 4], start_frame % 4);
+        unsigned char curr_size = get_first_non_follow_frame(bitmap[start_frame / 4], start_frame % 4);
         size += ((unsigned long) (curr_size - (start_frame % 4)));
         start_frame += ((unsigned long) (curr_size - (start_frame % 4)));
         if(curr_size < 4) {
@@ -172,7 +172,7 @@ void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned
 unsigned char ContFramePool::get_state_for_frame(unsigned long start_frame)
 {
     unsigned long item_no = start_frame / 4; // 4 because one char will store info for 4 frames
-    unsigned short int displacement_in_byte = 3 - (start_frame % 4); // one char represents these 4 frames (00112233)
+    unsigned char int displacement_in_byte = 3 - (start_frame % 4); // one char represents these 4 frames (00112233)
     unsigned char the_byte = bitmap[item_no];
     unsigned char value_of_frame = the_byte >> (displacement_in_byte*2);
     value_of_frame == value_of_frame & 0x03; // shutdown bits other than the first two bits (for comparator)
@@ -198,7 +198,7 @@ unsigned long ContFramePool::check_continous_free_frames(unsigned long start_fra
 {
     unsigned long return_size = 0;
     while (return_size < cutoff) {
-        unsigned short first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
+        unsigned char first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
         return_size += ((unsigned long) (first_occupied - (start_frame % 4)));
         if(return_size < 4) {
             break;
@@ -208,7 +208,7 @@ unsigned long ContFramePool::check_continous_free_frames(unsigned long start_fra
     return return_size;
 }
 
-unsigned short ContFramePool::get_first_free_frame(unsigned char bit_block, unsigned short start_at)
+unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block, unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -217,7 +217,7 @@ unsigned short ContFramePool::get_first_free_frame(unsigned char bit_block, unsi
         // is a bit more optimized (thinking for machine)
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned short i = 0; i < start_at; i++) {
+    for(unsigned char i = 0; i < start_at; i++) {
         occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block & occupied_mask; // we fake that i frames are occupied even if they are not
@@ -247,7 +247,7 @@ unsigned short ContFramePool::get_first_free_frame(unsigned char bit_block, unsi
     return 4; // should never come here ideally.
 }
 
-unsigned short ContFramePool::get_first_non_follow_frame(unsigned char bit_block, unsigned short start_at)
+unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block, unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -256,7 +256,7 @@ unsigned short ContFramePool::get_first_non_follow_frame(unsigned char bit_block
         // is a bit more optimized (thinking for machine)
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned short i = 0; i < start_at; i++) {
+    for(unsigned char i = 0; i < start_at; i++) {
         occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block & occupied_mask; // we fake that i frames are follow even if they are not
@@ -281,7 +281,7 @@ unsigned short ContFramePool::get_first_non_follow_frame(unsigned char bit_block
     return 4; // should never come here ideally.
 }
 
-unsigned short ContFramePool::get_first_occupied_frame(unsigned char bit_block, unsigned short start_at)
+unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block, unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -290,7 +290,7 @@ unsigned short ContFramePool::get_first_occupied_frame(unsigned char bit_block, 
         // is a bit more optimized (thinking for machine)
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned short i = 0; i < start_at; i++) {
+    for(unsigned char i = 0; i < start_at; i++) {
         occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block | ~occupied_mask; // we fake that i frames are free even if they are not (note the not operator in occupied)
@@ -315,14 +315,14 @@ unsigned short ContFramePool::get_first_occupied_frame(unsigned char bit_block, 
     return 4; // should never come here ideally
 }
 
-unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */)
+unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */)
 {
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
-    for(unsigned short i = 0; i < start_at; i++) {
+    for(unsigned char i = 0; i < start_at; i++) {
         left_free_mask >> 2;
     }
-    for(unsigned short i = 4; i > end_at; i--) {
+    for(unsigned char i = 4; i > end_at; i--) {
         right_free_mask << 2;
     }
     unsigned char free_mask = left_free_mask & right_free_mask;
@@ -330,14 +330,14 @@ unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsign
     return block | free_mask;
 }
 
-unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */, bool want_head)
+unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */, bool want_head)
 {
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
-    for(unsigned short i = 0; i < start_at; i++) {
+    for(unsigned char i = 0; i < start_at; i++) {
         left_free_mask >> 2;
     }
-    for(unsigned short i = 4; i > end_at; i--) {
+    for(unsigned char i = 4; i > end_at; i--) {
         right_free_mask << 2;
     }
     unsigned char free_mask = left_free_mask & right_free_mask;
@@ -369,10 +369,11 @@ void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
 {
     bool want_head = true;
     while (size > 0) {
-        bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4), want_head);
+        unsigned char curr_frame_count = 4 - (start_frame % 4);
+        bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < curr_frame_count ? size : curr_frame_count), want_head);
         want_head = false;
-        size -= (size < 4 ? size : 4);
-        start_frame += ((unsigned long) (4 - (start_frame % 4)));
+        size -= (size < curr_frame_count ? size : curr_frame_count);
+        start_frame += curr_frame_count;
     }
 }
 
@@ -428,7 +429,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     unsigned long allocated_frame = 0;
     unsigned long total_size = end_frame_no - base_frame_no;
     for(; allocated_frame < total_size; /* we'll increment the frame no inside as needed */) {
-        unsigned short first_free = get_first_free_frame(bitmap[allocated_frame / 4], allocated_frame % 4);
+        unsigned char first_free = get_first_free_frame(bitmap[allocated_frame / 4], allocated_frame % 4);
         allocated_frame += ((unsigned long) first_free);
         if(first_free < 4) {
             unsigned long curr_free_size = check_continous_free_frames(allocated_frame, _n_frames);

@@ -97,11 +97,11 @@ private:
     bool is_head_frame(unsigned char frame_state);
     bool is_follow_frame(unsigned char frame_state);
     unsigned long check_continous_free_frames(unsigned long start_frame, unsigned long cutoff);
-    unsigned short get_first_free_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned short get_first_non_follow_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned short get_first_occupied_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned char release_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */);
-    unsigned char assign_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */, bool want_head);
+    unsigned char get_first_free_frame(unsigned char bit_block, unsigned char start_at);
+    unsigned char get_first_non_follow_frame(unsigned char bit_block, unsigned char start_at);
+    unsigned char get_first_occupied_frame(unsigned char bit_block, unsigned char start_at);
+    unsigned char release_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */);
+    unsigned char assign_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */, bool want_head);
     void assign_frames(unsigned long start_frame, unsigned long size);
 
 public:
