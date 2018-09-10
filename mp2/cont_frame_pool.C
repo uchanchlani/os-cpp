@@ -164,7 +164,7 @@ void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned
 {
     while (size > 0) {
         bitmap[start_frame / 4] = release_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4));
-        size -= 4;
+        size -= (size < 4 ? size : 4);
         start_frame += ((unsigned long) (4 - (start_frame % 4)));
     }
 }
@@ -371,7 +371,7 @@ void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
     while (size > 0) {
         bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4), want_head);
         want_head = false;
-        size -= 4;
+        size -= (size < 4 ? size : 4);
         start_frame += ((unsigned long) (4 - (start_frame % 4)));
     }
 }
