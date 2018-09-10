@@ -172,7 +172,7 @@ void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned
 unsigned char ContFramePool::get_state_for_frame(unsigned long start_frame)
 {
     unsigned long item_no = start_frame / 4; // 4 because one char will store info for 4 frames
-    unsigned char int displacement_in_byte = 3 - (start_frame % 4); // one char represents these 4 frames (00112233)
+    unsigned char displacement_in_byte = 3 - (start_frame % 4); // one char represents these 4 frames (00112233)
     unsigned char the_byte = bitmap[item_no];
     unsigned char value_of_frame = the_byte >> (displacement_in_byte*2);
     value_of_frame == value_of_frame & 0x03; // shutdown bits other than the first two bits (for comparator)
