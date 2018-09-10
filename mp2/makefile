@@ -1,7 +1,7 @@
 CPP = gcc
 CPP_OPTIONS = -g -m32 -nostdlib -fno-builtin -nostartfiles -nodefaultlibs -fno-exceptions -fno-rtti -fno-stack-protector -fleading-underscore -fno-asynchronous-unwind-tables
 
-all: kernel.elf
+all: kernel.bin
 
 clean:
 	rm -f *.o *.bin *.elf
@@ -40,8 +40,8 @@ kernel.o: kernel.C console.H
 	$(CPP) $(CPP_OPTIONS) -c -o kernel.o kernel.C
 
 
-kernel.elf: start.o utils.o kernel.o assert.o console.o \
+kernel.bin: start.o utils.o kernel.o assert.o console.o \
    cont_frame_pool.o machine.o machine_low.o  
-	ld -melf_i386 -T linker.ld -o kernel.elf start.o utils.o \
+	ld -melf_i386 -T linker.ld -o kernel.bin start.o utils.o \
    kernel.o assert.o console.o \
    cont_frame_pool.o  machine.o machine_low.o 
