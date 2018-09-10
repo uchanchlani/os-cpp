@@ -196,7 +196,7 @@ unsigned long ContFramePool::check_continous_free_frames(unsigned long start_fra
     while (return_size < cutoff) {
         unsigned char first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
         return_size += ((unsigned long) (first_occupied - (start_frame % 4)));
-        if(return_size < 4) {
+        if(first_occupied < 4) {
             break;
         }
         start_frame += ((unsigned long) (4 - (start_frame % 4)));
@@ -366,7 +366,7 @@ void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
     bool want_head = true;
     while (size > 0) {
         unsigned char curr_frame_count = 4 - (start_frame % 4);
-        bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < curr_frame_count ? size : curr_frame_count), want_head);
+        bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (start_frame %4) + (size < curr_frame_count ? size : curr_frame_count), want_head);
         want_head = false;
         size -= (size < curr_frame_count ? size : curr_frame_count);
         start_frame += curr_frame_count;
