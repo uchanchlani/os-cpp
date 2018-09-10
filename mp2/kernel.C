@@ -75,7 +75,7 @@ int main() {
 
     /* ---- PROCESS POOL -- */
 
-/*
+
     unsigned long n_info_frames = ContFramePool::needed_info_frames(PROCESS_POOL_SIZE);
 
     unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames);
@@ -86,7 +86,7 @@ int main() {
                                    n_info_frames);
     
     process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
-*/
+
     /* -- MOST OF WHAT WE NEED IS SETUP. THE KERNEL CAN START. */
 
     Console::puts("Hello World!\n");
