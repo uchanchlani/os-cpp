@@ -20,7 +20,9 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+#define FREE_FRAME 0x03   // bits representation 11
+#define HEAD_FRAME 0x01   // bits representation 01
+#define FOLLOW_FRAME 0x00 // bits representation 00
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
@@ -44,9 +46,38 @@ class ContFramePool {
     
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
-
+    unsigned long base_frame_no;
+    unsigned long end_frame_no;
+    unsigned long info_frame_no;
+    unsigned long n_info_frames;
+    unsigned long free_frames;
+    unsigned char * bitmap;
+    /*
+     * my bitmap uses 2 bits per frame. I had the choice of either using
+     * 2 bit array objects (one for if it's free or not and other for
+     * if it's a head frame or not. But this gives rise to complications
+     * like how to store the 2 bitmaps in the memory.
+     * I can assume that the no. of frames is fixed and the bitmap can be
+     * stored in exactly x no of bits but I don't like the design somehow
+     * as the bitmap won't be runtime extensible
+     *
+     * Second approach, I use 2 consecutive bits for my frame, say ab
+     * if a bit is on it means the frame is free, else not
+     * if a is off: if b off then head, else follow
+     * any frame x (0 is the first frame belonging to the pool (not the first
+     * frame of the memory) is represented by 2*x and 2*x+1 bits in bitmap
+     */
     static PoolManager * pool_manager;
+
     void release_pool_frames(unsigned long _first_frame_no);
+    unsigned char get_state_for_frame(unsigned long frame_no);
+    bool is_free_frame(unsigned char frame_state);
+    bool is_head_frame(unsigned char frame_state);
+    bool is_follow_frame(unsigned char frame_state);
+    unsigned long check_continous_free_frames(unsigned long start, unsigned long cutoff);
+    unsigned short get_first_free_frame(unsigned char bit_block);
+    unsigned short get_first_occupied_frame(unsigned char bit_block);
+    void block_frames(unsigned long start, unsigned long size);
 
 public:
 
@@ -137,6 +168,7 @@ public:
 
  
     ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
+    void add_new_pool(PoolManager * pool_manager);
 }
 
 #endif
