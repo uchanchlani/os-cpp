@@ -142,10 +142,6 @@ void error_msg_for_frame_pool()
 void ContFramePool::release_pool_frames(unsigned long start_frame)
 {
     unsigned long start_frame_copy = start_frame;
-    if(!is_head_frame(get_state_for_frame(start_frame))) {
-        error_msg_for_frame_pool();
-        return;
-    }
     unsigned long size = 1;
     start_frame++;
     while(true) {
