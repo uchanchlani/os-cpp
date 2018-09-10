@@ -49,9 +49,9 @@ private:
     unsigned long base_frame_no;
     unsigned long end_frame_no;
     unsigned long info_frame_no;
-    unsigned long n_info_frames;
     unsigned long free_frames;
     unsigned char * bitmap;
+    PoolManager curr_pool_manager; // to bring this in stack memory
     /*
      * my bitmap uses 2 bits per frame. I had the choice of either using
      * 2 bit array objects (one for if it's free or not and other for
@@ -69,15 +69,20 @@ private:
      */
     static PoolManager * pool_manager;
 
-    void release_pool_frames(unsigned long _first_frame_no);
-    unsigned char get_state_for_frame(unsigned long frame_no);
-    bool is_free_frame(unsigned char frame_state);
-    bool is_head_frame(unsigned char frame_state);
-    bool is_follow_frame(unsigned char frame_state);
-    unsigned long check_continous_free_frames(unsigned long start, unsigned long cutoff);
-    unsigned short get_first_free_frame(unsigned char bit_block);
-    unsigned short get_first_occupied_frame(unsigned char bit_block);
-    void block_frames(unsigned long start, unsigned long size);
+    // private functions block
+    void ContFramePool::release_pool_frames(unsigned long start_frame);
+    void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned long size);
+    unsigned char ContFramePool::get_state_for_frame(unsigned long start_frame);
+    bool ContFramePool::is_free_frame(unsigned char frame_state);
+    bool ContFramePool::is_head_frame(unsigned char frame_state);
+    bool ContFramePool::is_follow_frame(unsigned char frame_state);
+    unsigned long ContFramePool::check_continous_free_frames(unsigned long start_frame, unsigned long cutoff);
+    unsigned short ContFramePool::get_first_free_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned short ContFramePool::get_first_non_follow_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned short ContFramePool::get_first_occupied_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */);
+    unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */, bool want_head);
+    void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size);
 
 public:
 
@@ -161,7 +166,9 @@ private:
     PoolManager * next;
 
 public:
-    PoolManager(unsigned long _base_frame,
+    PoolManager();
+
+    void init_pool_manager(unsigned long _base_frame,
                 unsigned long _n_frames,
                 ContFramePool * _curr_pool);
 
