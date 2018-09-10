@@ -70,19 +70,19 @@ private:
     static PoolManager * pool_manager;
 
     // private functions block
-    void ContFramePool::release_pool_frames(unsigned long start_frame);
-    void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned long size);
-    unsigned char ContFramePool::get_state_for_frame(unsigned long start_frame);
-    bool ContFramePool::is_free_frame(unsigned char frame_state);
-    bool ContFramePool::is_head_frame(unsigned char frame_state);
-    bool ContFramePool::is_follow_frame(unsigned char frame_state);
-    unsigned long ContFramePool::check_continous_free_frames(unsigned long start_frame, unsigned long cutoff);
-    unsigned short ContFramePool::get_first_free_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned short ContFramePool::get_first_non_follow_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned short ContFramePool::get_first_occupied_frame(unsigned char bit_block, unsigned short start_at);
-    unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */);
-    unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */, bool want_head);
-    void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size);
+    void release_pool_frames_util(unsigned long start_frame, unsigned long size);
+    void release_pool_frames(unsigned long start_frame);
+    unsigned char get_state_for_frame(unsigned long start_frame);
+    bool is_free_frame(unsigned char frame_state);
+    bool is_head_frame(unsigned char frame_state);
+    bool is_follow_frame(unsigned char frame_state);
+    unsigned long check_continous_free_frames(unsigned long start_frame, unsigned long cutoff);
+    unsigned short get_first_free_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned short get_first_non_follow_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned short get_first_occupied_frame(unsigned char bit_block, unsigned short start_at);
+    unsigned char release_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */);
+    unsigned char assign_frames_in_block(unsigned char block, unsigned short start_at /* inclusive */, unsigned short end_at /* exclusive */, bool want_head);
+    void assign_frames(unsigned long start_frame, unsigned long size);
 
 public:
 
