@@ -376,6 +376,13 @@ void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
     }
 }
 
+void set_bit_map(unsigned char * bitmap, unsigned long _n_frames) {
+    _n_frames = (_n_frames / 4) + (_n_frames % 4 == 0 ? 0 : 1);
+    for(unsigned long i = 0; i < _n_frames; i++) {
+        bitmap[i] = 0xff;
+    }
+}
+
 /*
  * Public methods
  */
@@ -392,6 +399,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     if(_info_frame_no == 0) {
         info_frame_no = base_frame_no;
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
+        set_bit_map(bitmap, _n_frames);
         assign_frames(0, needed_info_frames(_n_frames));
     } else {
         if(needed_info_frames(_n_frames) > _n_info_frames) {
@@ -400,6 +408,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         }
         info_frame_no = _info_frame_no;
         bitmap = (unsigned char *) (_info_frame_no * FRAME_SIZE);
+        set_bit_map(bitmap, _n_frames);
     }
 
     curr_pool_manager.init_pool_manager(base_frame_no, _n_frames, this);
