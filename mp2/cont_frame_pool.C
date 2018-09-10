@@ -218,7 +218,7 @@ unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block, unsig
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
     for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask >> 2; // add occupied to ith frame
+        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block & occupied_mask; // we fake that i frames are occupied even if they are not
 
@@ -257,7 +257,7 @@ unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block,
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
     for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask >> 2; // add occupied to ith frame
+        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block & occupied_mask; // we fake that i frames are follow even if they are not
 
@@ -291,7 +291,7 @@ unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block, u
     }
     unsigned char occupied_mask = 0xff; // start with no occupied mask
     for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask >> 2; // add occupied to ith frame
+        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
     }
     bit_block = bit_block | ~occupied_mask; // we fake that i frames are free even if they are not (note the not operator in occupied)
 
@@ -320,10 +320,10 @@ unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsign
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
     for(unsigned char i = 0; i < start_at; i++) {
-        left_free_mask >> 2;
+        left_free_mask = left_free_mask >> 2;
     }
     for(unsigned char i = 4; i > end_at; i--) {
-        right_free_mask << 2;
+        right_free_mask = right_free_mask << 2;
     }
     unsigned char free_mask = left_free_mask & right_free_mask;
 
@@ -335,10 +335,10 @@ unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigne
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
     for(unsigned char i = 0; i < start_at; i++) {
-        left_free_mask >> 2;
+        left_free_mask = left_free_mask >> 2;
     }
     for(unsigned char i = 4; i > end_at; i--) {
-        right_free_mask << 2;
+        right_free_mask = right_free_mask << 2;
     }
     unsigned char free_mask = left_free_mask & right_free_mask;
 
@@ -402,6 +402,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
         set_bit_map(bitmap, _n_frames);
         assign_frames(0, needed_info_frames(_n_frames));
+        free_frames -= needed_info_frames(_n_frames);
     } else {
         if(needed_info_frames(_n_frames) > _n_info_frames) {
             error_msg_for_frame_pool();
@@ -434,7 +435,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
         if(first_free < 4) {
             unsigned long curr_free_size = check_continous_free_frames(allocated_frame, _n_frames);
             if(curr_free_size >= _n_frames) {
-                // got it
+                break;
             } else {
                 allocated_frame += curr_free_size;
                 rem_free_frames -= curr_free_size;
@@ -447,8 +448,9 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     if(allocated_frame >= end_frame_no) {
         return 0;
     }
+    assign_frames(allocated_frame, _n_frames);
     free_frames -= _n_frames;
-    return allocated_frame;
+    return base_frame_no + allocated_frame;
 }
 
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
