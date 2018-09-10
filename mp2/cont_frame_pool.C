@@ -398,7 +398,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
             error_msg_for_frame_pool();
             return;
         }
-        info_frame_no = _info_frame_no
+        info_frame_no = _info_frame_no;
         bitmap = (unsigned char *) (_info_frame_no * FRAME_SIZE);
     }
 
@@ -444,7 +444,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
-    block_frames(_base_frame_no, _n_frames);
+    assign_frames(_base_frame_no, _n_frames);
 }
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
@@ -453,7 +453,7 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
         error_msg_for_frame_pool();
         return;
     }
-    ContFramePool * curr_pool = pool_manager->get_pool_for_frames(_first_frame_no);
+    ContFramePool * curr_pool = pool_manager->get_pool_for_frame(_first_frame_no);
     if (curr_pool == NULL) {
         error_msg_for_frame_pool();
         return;
@@ -475,7 +475,7 @@ void PoolManager::init_pool_manager(unsigned long _base_frame,
                          ContFramePool * _curr_pool)
 {
     base_frame = _base_frame;
-    n_frame = _n_frame;
+    n_frames = _n_frames;
     curr_pool = _curr_pool;
     next = NULL;
 }

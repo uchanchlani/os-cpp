@@ -40,7 +40,27 @@
 /* C o n t F r a m e   P o o l  */
 /*--------------------------------------------------------------------------*/
 
-class PoolManager;
+class ContFramePool;
+
+class PoolManager {
+private:
+    unsigned long base_frame;
+    unsigned long n_frames;
+    ContFramePool * curr_pool;
+    PoolManager * next;
+
+public:
+    PoolManager();
+
+    void init_pool_manager(unsigned long _base_frame,
+                unsigned long _n_frames,
+                ContFramePool * _curr_pool);
+
+
+
+    ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
+    void add_new_pool(PoolManager * pool_manager);
+};
 
 class ContFramePool {
     
@@ -157,25 +177,5 @@ public:
      The exact number is computed in this function..
      */
 };
-
-class PoolManager {
-private:
-    unsigned long base_frame;
-    unsigned long n_frames;
-    ContFramePool * curr_pool
-    PoolManager * next;
-
-public:
-    PoolManager();
-
-    void init_pool_manager(unsigned long _base_frame,
-                unsigned long _n_frames,
-                ContFramePool * _curr_pool);
-
-
- 
-    ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
-    void add_new_pool(PoolManager * pool_manager);
-}
 
 #endif
