@@ -133,78 +133,26 @@ PoolManager * ContFramePool::pool_manager = NULL;
  * will be offsetted from frame pool start point
  * (unless explicitly mentioned)
  */
+
+// just a wrapper function so that I don't write these two lines again and again
+// I hate code duplications you know
 void error_msg_for_frame_pool()
 {
     Console::puts("Error, unexpected behaviour identified\n");
     assert(false);
 }
 
-void ContFramePool::release_pool_frames(unsigned long start_frame)
-{
-    unsigned long start_frame_copy = start_frame;
-    unsigned long size = 1;
-    start_frame++;
-    while(true) {
-        unsigned char curr_size = get_first_non_follow_frame(bitmap[start_frame / 4], start_frame % 4);
-        size += ((unsigned long) (curr_size - (start_frame % 4)));
-        start_frame += ((unsigned long) (curr_size - (start_frame % 4)));
-        if(curr_size < 4) {
-            break;
-        }
-    }
-    release_pool_frames_util(start_frame_copy, size);
-    free_frames += size;
-}
-
-void ContFramePool::release_pool_frames_util(unsigned long start_frame, unsigned long size)
-{
-    while (size > 0) {
-        bitmap[start_frame / 4] = release_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4));
-        size -= (size < 4 ? size : 4);
-        start_frame += ((unsigned long) (4 - (start_frame % 4)));
+// helper function to set all the bits to free initially.
+void set_bit_map(unsigned char * bitmap,
+                 unsigned long _n_frames) {
+    _n_frames = (_n_frames / 4) + (_n_frames % 4 == 0 ? 0 : 1);
+    for(unsigned long i = 0; i < _n_frames; i++) {
+        bitmap[i] = 0xff;
     }
 }
 
-unsigned char ContFramePool::get_state_for_frame(unsigned long start_frame)
-{
-    unsigned long item_no = start_frame / 4; // 4 because one char will store info for 4 frames
-    unsigned char displacement_in_byte = 3 - (start_frame % 4); // one char represents these 4 frames (00112233)
-    unsigned char the_byte = bitmap[item_no];
-    unsigned char value_of_frame = the_byte >> (displacement_in_byte*2);
-    value_of_frame == value_of_frame & 0x03; // shutdown bits other than the first two bits (for comparator)
-    return value_of_frame;
-}
-
-bool ContFramePool::is_free_frame(unsigned char frame_state)
-{
-    return frame_state == FREE_FRAME;
-}
-
-bool ContFramePool::is_head_frame(unsigned char frame_state)
-{
-    return frame_state == HEAD_FRAME;
-}
-
-bool ContFramePool::is_follow_frame(unsigned char frame_state)
-{
-    return frame_state == FOLLOW_FRAME;
-}
-
-unsigned long ContFramePool::check_continous_free_frames(unsigned long start_frame, unsigned long cutoff)
-{
-    unsigned long return_size = 0;
-    while (return_size < cutoff) {
-        unsigned char first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
-        return_size += ((unsigned long) (first_occupied - (start_frame % 4)));
-        if(first_occupied < 4) {
-            break;
-        }
-        start_frame += ((unsigned long) (4 - (start_frame % 4)));
-    }
-    return return_size;
-}
-
-unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block, unsigned char start_at)
+unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block,
+                                                  unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -243,7 +191,8 @@ unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block, unsig
     return 4; // should never come here ideally.
 }
 
-unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block, unsigned char start_at)
+unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block,
+                                                        unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -277,7 +226,8 @@ unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block,
     return 4; // should never come here ideally.
 }
 
-unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block, unsigned char start_at)
+unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block,
+                                                      unsigned char start_at)
 {
     if(start_at > 3) {
         return 4;
@@ -311,7 +261,9 @@ unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block, u
     return 4; // should never come here ideally
 }
 
-unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */)
+unsigned char ContFramePool::release_frames_in_block(unsigned char block,
+                                                     unsigned char start_at /* inclusive */,
+                                                     unsigned char end_at /* exclusive */)
 {
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
@@ -326,7 +278,10 @@ unsigned char ContFramePool::release_frames_in_block(unsigned char block, unsign
     return block | free_mask;
 }
 
-unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigned char start_at /* inclusive */, unsigned char end_at /* exclusive */, bool want_head)
+unsigned char ContFramePool::assign_frames_in_block(unsigned char block,
+                                                    unsigned char start_at /* inclusive */,
+                                                    unsigned char end_at /* exclusive */,
+                                                    bool want_head)
 {
     unsigned char left_free_mask = 0xff;
     unsigned char right_free_mask = 0xff;
@@ -361,7 +316,45 @@ unsigned char ContFramePool::assign_frames_in_block(unsigned char block, unsigne
     return block;
 }
 
-void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
+unsigned long ContFramePool::check_continous_free_frames(unsigned long start_frame,
+                                                         unsigned long cutoff)
+{
+    unsigned long return_size = 0;
+    while (return_size < cutoff) {
+        unsigned char first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
+        return_size += ((unsigned long) (first_occupied - (start_frame % 4)));
+        if(first_occupied < 4) {
+            break;
+        }
+        start_frame += ((unsigned long) (4 - (start_frame % 4)));
+    }
+    return return_size;
+}
+
+void ContFramePool::release_pool_frames(unsigned long start_frame)
+{
+    unsigned long start_frame_copy = start_frame;
+    unsigned long size = 1;
+    start_frame++;
+    while(true) {
+        unsigned char curr_size = get_first_non_follow_frame(bitmap[start_frame / 4], start_frame % 4);
+        size += ((unsigned long) (curr_size - (start_frame % 4)));
+        start_frame += ((unsigned long) (curr_size - (start_frame % 4)));
+        if(curr_size < 4) {
+            break;
+        }
+    }
+
+    while (size > 0) {
+        bitmap[start_frame / 4] = release_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4));
+        size -= (size < 4 ? size : 4);
+        start_frame += ((unsigned long) (4 - (start_frame % 4)));
+        free_frames += ((unsigned long) (4 - (start_frame % 4)));
+    }
+}
+
+void ContFramePool::assign_frames(unsigned long start_frame,
+                                  unsigned long size)
 {
     bool want_head = true;
     while (size > 0) {
@@ -369,14 +362,8 @@ void ContFramePool::assign_frames(unsigned long start_frame, unsigned long size)
         bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (start_frame %4) + (size < curr_frame_count ? size : curr_frame_count), want_head);
         want_head = false;
         size -= (size < curr_frame_count ? size : curr_frame_count);
+        free_frames -= (size < curr_frame_count ? size : curr_frame_count);
         start_frame += curr_frame_count;
-    }
-}
-
-void set_bit_map(unsigned char * bitmap, unsigned long _n_frames) {
-    _n_frames = (_n_frames / 4) + (_n_frames % 4 == 0 ? 0 : 1);
-    for(unsigned long i = 0; i < _n_frames; i++) {
-        bitmap[i] = 0xff;
     }
 }
 
@@ -398,7 +385,6 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
         set_bit_map(bitmap, _n_frames);
         assign_frames(0, needed_info_frames(_n_frames));
-        free_frames -= needed_info_frames(_n_frames);
     } else {
         if(needed_info_frames(_n_frames) > _n_info_frames) {
             error_msg_for_frame_pool();
@@ -445,16 +431,23 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
         return 0;
     }
     assign_frames(allocated_frame, _n_frames);
-    free_frames -= _n_frames;
     return base_frame_no + allocated_frame;
 }
 
+/*
+ * mark inaccessible basically assigns the fra
+ */
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
     assign_frames(_base_frame_no, _n_frames);
 }
 
+/*
+ * checks in the linked list pointed by static pointer to pool manager
+ * tries to find out which frame pool manages the frame and calls it to release
+ * the frame.
+ */
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
     if(pool_manager == NULL) {
@@ -469,6 +462,10 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
     curr_pool->release_pool_frames(_first_frame_no - curr_pool->base_frame_no);
 }
 
+/*
+ * divide by 4 because 1 byte manages 4 bits
+ * then divide by frame size because we have total frame_size bytes in a frame
+ */
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
     _n_frames = (_n_frames / 4) + (_n_frames % 4 == 0 ? 0 : 1);
@@ -479,8 +476,8 @@ unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 PoolManager::PoolManager() {}
 
 void PoolManager::init_pool_manager(unsigned long _base_frame,
-                         unsigned long _n_frames,
-                         ContFramePool * _curr_pool)
+                                    unsigned long _n_frames,
+                                    ContFramePool * _curr_pool)
 {
     base_frame = _base_frame;
     n_frames = _n_frames;
