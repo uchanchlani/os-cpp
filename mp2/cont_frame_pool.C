@@ -109,6 +109,7 @@
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
 
+// initialize the pool manager with 0 frame pools
 PoolManager * ContFramePool::pool_manager = NULL;
 
 /*--------------------------------------------------------------------------*/
@@ -156,21 +157,24 @@ unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block,
 {
     if(start_at > 3) {
         return 4;
-        // I can do start at = 4, ussentially building the
-        // same functionality, but this
-        // is a bit more optimized (thinking for machine)
     }
-    unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
-    }
-    bit_block = bit_block & occupied_mask; // we fake that i frames are occupied even if they are not
+
+    /*
+     * This is a bit mask to fake that the start_at number of bits
+     * are not what the function requires
+     */
+    unsigned char bit_mask = 0xff;
+    bit_mask = bit_mask >> (2*start_at);
+
+    // we fake that i frames are occupied even if they are not
+    bit_block = bit_block & bit_mask;
 
     // now try getting the first free frame
     bit_block = bit_block & 0xaa; // unsetting bits which doesn't represent free bits 10101010
     if(bit_block == 0x00) { // no free frame as all frames are occupied, we return 4
         return 4;
     }
+
     // now we check all bits sequentially to see which is free
     if((bit_block & 0xc0) != 0x00) { // 11,00,00,00 unset 2,3,4 (PS: can do 10,00,00,00 as well, but this is more readable)
                                      // compare with 10,00,00,00 (representing first frame free)
@@ -196,20 +200,23 @@ unsigned char ContFramePool::get_first_non_follow_frame(unsigned char bit_block,
 {
     if(start_at > 3) {
         return 4;
-        // I can do start at = 4, ussentially building the
-        // same functionality, but this
-        // is a bit more optimized (thinking for machine)
     }
-    unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
-    }
-    bit_block = bit_block & occupied_mask; // we fake that i frames are follow even if they are not
+
+    /*
+     * This is a bit mask to fake that the start_at number of bits
+     * are not what the function requires
+     */
+    unsigned char bit_mask = 0xff;
+    bit_mask = bit_mask >> (2*start_at);
+
+    bit_block = bit_block & bit_mask;
+    // we fake that i frames are follow even if they are not
 
     // now try getting the first non follow frame
     if(bit_block == 0x00) { // no free frame as all frames are occupied, we return 4
         return 4;
     }
+
     // now we check all bits sequentially to see which is non follow
     if((bit_block & 0xc0) != 0x00) { // 11,00,00,00 unset 2,3,4
         return 0;
@@ -231,15 +238,17 @@ unsigned char ContFramePool::get_first_occupied_frame(unsigned char bit_block,
 {
     if(start_at > 3) {
         return 4;
-        // I can do start at = 4, ussentially building the
-        // same functionality, but this
-        // is a bit more optimized (thinking for machine)
     }
-    unsigned char occupied_mask = 0xff; // start with no occupied mask
-    for(unsigned char i = 0; i < start_at; i++) {
-        occupied_mask = occupied_mask >> 2; // add occupied to ith frame
-    }
-    bit_block = bit_block | ~occupied_mask; // we fake that i frames are free even if they are not (note the not operator in occupied)
+
+    /*
+     * This is a bit mask to fake that the start_at number of bits
+     * are not what the function requires
+     */
+    unsigned char bit_mask = 0xff;
+    bit_mask = bit_mask >> (2*start_at);
+
+    bit_block = bit_block | ~bit_mask;
+    // we fake that i frames are free even if they are not (note the not operator in occupied)
 
     bit_block = bit_block & 0xaa; // unsetting bits which doesn't represent free bits 10101010
     if(bit_block == 0xaa) { // all frames free
