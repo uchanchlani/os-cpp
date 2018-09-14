@@ -164,7 +164,7 @@ unsigned char ContFramePool::get_first_free_frame(unsigned char bit_block,
      * are not what the function requires
      */
     unsigned char bit_mask = 0xff;
-    bit_mask = bit_mask >> (2*start_at);
+    bit_mask = bit_mask >> 2 * start_at;
 
     // we fake that i frames are occupied even if they are not
     bit_block = bit_block & bit_mask;
@@ -328,8 +328,14 @@ unsigned char ContFramePool::assign_frames_in_block(unsigned char block,
 unsigned long ContFramePool::check_continous_free_frames(unsigned long start_frame,
                                                          unsigned long cutoff)
 {
+    unsigned long end_frame_relative = end_frame_no - base_frame_no;
     unsigned long return_size = 0;
-    while (return_size < cutoff) {
+
+    // here we try to figure our the size of frames which are free.
+    // here we require that get first occupied frame function
+    // we check 4 frames at a time and stop if we find a desired frame
+    // we do it optimally using bit operations
+    while (return_size < cutoff && start_frame < end_frame_relative) {
         unsigned char first_occupied = get_first_occupied_frame(bitmap[start_frame / 4], start_frame % 4);
         return_size += ((unsigned long) (first_occupied - (start_frame % 4)));
         if(first_occupied < 4) {
@@ -337,15 +343,27 @@ unsigned long ContFramePool::check_continous_free_frames(unsigned long start_fra
         }
         start_frame += ((unsigned long) (4 - (start_frame % 4)));
     }
+
     return return_size;
 }
 
 void ContFramePool::release_pool_frames(unsigned long start_frame)
 {
+    unsigned long end_frame_relative = end_frame_no - base_frame_no;
     unsigned long start_frame_copy = start_frame;
     unsigned long size = 1;
-    start_frame++;
+    start_frame++; // we know the first frame is head, we note it in size and proceed
+
+    // here we try to figure out the size of the frames assigned at that time
+    // here we require that get first non follow frame function.
+    // the way do it is we check 4 frames at a time using bit operators (for optimizations)
+    // the while loop checks 4 frames at a time
+    // we break if we reach the end of the frame pool or we get the first free frame
     while(true) {
+        if(start_frame >= end_frame_relative) {
+            break;
+        }
+
         unsigned char curr_size = get_first_non_follow_frame(bitmap[start_frame / 4], start_frame % 4);
         size += ((unsigned long) (curr_size - (start_frame % 4)));
         start_frame += ((unsigned long) (curr_size - (start_frame % 4)));
@@ -354,6 +372,10 @@ void ContFramePool::release_pool_frames(unsigned long start_frame)
         }
     }
 
+    start_frame = start_frame_copy;
+
+    // now we free the frames 4 at a time according to the size
+    // here we use the release frames in block method to do the bit operattons for freeing the frames
     while (size > 0) {
         bitmap[start_frame / 4] = release_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4));
         size -= (size < 4 ? size : 4);
@@ -365,6 +387,9 @@ void ContFramePool::release_pool_frames(unsigned long start_frame)
 void ContFramePool::assign_frames(unsigned long start_frame,
                                   unsigned long size)
 {
+    // to assign frames first frame must be marked head frame that's what we are trying to do by keeping want_head = 1
+    // PS want_head becomes 0 after the first block allotment
+    // here we use the assign frames in block function for the bit operations
     bool want_head = true;
     while (size > 0) {
         unsigned char curr_frame_count = 4 - (start_frame % 4);
@@ -389,25 +414,38 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     end_frame_no = _base_frame_no + _n_frames;
     free_frames = _n_frames;
 
+    // if the info frame no is 0 we have to allocate some of the current pool's frame to the info frames
     if(_info_frame_no == 0) {
         info_frame_no = base_frame_no;
+
+        // initialize the bitmap pointer to the start of the frames and set the required no of bits to free
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
         set_bit_map(bitmap, _n_frames);
+
+        // now mark the number of frames used in bitmap to allocated
         assign_frames(0, needed_info_frames(_n_frames));
     } else {
+        // if we are given some frames for bitmap storage and it is less than our demand we will panic
         if(needed_info_frames(_n_frames) > _n_info_frames) {
             error_msg_for_frame_pool();
             return;
         }
+
         info_frame_no = _info_frame_no;
+
+        // initialize the bitmap pointer to the start of the allocated frames and set the required no of bits to free
         bitmap = (unsigned char *) (_info_frame_no * FRAME_SIZE);
         set_bit_map(bitmap, _n_frames);
     }
 
+    // add the current pool to our pool manager linked list
+
+    // the way cpp works, the object's constructor must be already called by now
+    // (reason for keeping the constructor generic), we now initialize our object with the desired values
     curr_pool_manager.init_pool_manager(base_frame_no, _n_frames, this);
-    if(pool_manager == NULL) {
+    if(pool_manager == NULL) { // no pools in pool manager, thus initialize the static variable here
         pool_manager = &curr_pool_manager;
-    } else {
+    } else { // else append it to the end of the pools
         pool_manager->add_new_pool(&curr_pool_manager);
     }
 }
@@ -417,34 +455,49 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     if(_n_frames > free_frames) {
         return 0;
     }
-    unsigned long rem_free_frames = free_frames;
-    unsigned long allocated_frame = 0;
-    unsigned long total_size = end_frame_no - base_frame_no;
+    unsigned long rem_free_frames = free_frames; // stores currently available free frames.
+                                                 // we break if the at any time this number falls below _n_frames
+    unsigned long allocated_frame = 0;           // we start with trying to allocate first frame we increment this number as our sliding window increases
+    unsigned long total_size = end_frame_no - base_frame_no; // end frame number relative to the start frame number
+
+    // this function simply skips the allocated blocks and checks the size of the free block
+    // if the size of the free block is greater than _n_frames we allocate it else we proceed further
     for(; allocated_frame < total_size; /* we'll increment the frame no inside as needed */) {
+
         unsigned char first_free = get_first_free_frame(bitmap[allocated_frame / 4], allocated_frame % 4);
         allocated_frame += ((unsigned long) first_free);
+
+        // if we get the first free frame we check for the continuos block of free frames
         if(first_free < 4) {
             unsigned long curr_free_size = check_continous_free_frames(allocated_frame, _n_frames);
+
+            // if got well and good, break
             if(curr_free_size >= _n_frames) {
                 break;
-            } else {
+            } else { // else proceed
                 allocated_frame += curr_free_size;
                 rem_free_frames -= curr_free_size;
             }
         }
+
+        // if not enough frames available break
         if(rem_free_frames < _n_frames) {
-            return 0;
+            allocated_frame = end_frame_no;
         }
     }
+
+    // if allocated frames not within the range return 0
     if(allocated_frame >= end_frame_no) {
         return 0;
     }
+
+    // assign frame and return
     assign_frames(allocated_frame, _n_frames);
     return base_frame_no + allocated_frame;
 }
 
 /*
- * mark inaccessible basically assigns the fra
+ * mark inaccessible basically assigns the frames
  */
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)

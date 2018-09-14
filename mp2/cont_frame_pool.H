@@ -189,7 +189,7 @@ private:
     unsigned char assign_frames_in_block(unsigned char block,
                                          unsigned char start_at /* inclusive */,
                                          unsigned char end_at /* exclusive */,
-                                         bool want_head /* the block can get request to mark all frames and follow frames */);
+                                         bool want_head /* the block can get request to mark all frames as follow frames */);
 
     /*
      * Given a start frame it tells the size of free frames block available
