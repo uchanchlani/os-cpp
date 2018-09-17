@@ -5,4 +5,6 @@ There has been a sweet mistake, where my virtualbox is committing files with the
 The code changes for the assignment are there in the master branch. Checkpoint till this point is available at branch checkpoint/mp1
 
 ## MP2
-The code changes for the assignment are currently being done in the mp2 branch. I will merge it to master once it is ready for submissions.
+The code changes for the assignment are now on master branch. 
+PS: I've created some more test scenarios with bigger test cases and added it in the kernel.C file.
+
