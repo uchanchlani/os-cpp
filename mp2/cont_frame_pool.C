@@ -378,9 +378,9 @@ void ContFramePool::release_pool_frames(unsigned long start_frame)
     // here we use the release frames in block method to do the bit operattons for freeing the frames
     while (size > 0) {
         bitmap[start_frame / 4] = release_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (size < 4 ? size : 4));
+        free_frames += (size < 4 ? size : 4);
         size -= (size < 4 ? size : 4);
         start_frame += ((unsigned long) (4 - (start_frame % 4)));
-        free_frames += ((unsigned long) (4 - (start_frame % 4)));
     }
 }
 
@@ -395,8 +395,8 @@ void ContFramePool::assign_frames(unsigned long start_frame,
         unsigned char curr_frame_count = 4 - (start_frame % 4);
         bitmap[start_frame / 4] = assign_frames_in_block(bitmap[start_frame / 4], start_frame % 4, (start_frame %4) + (size < curr_frame_count ? size : curr_frame_count), want_head);
         want_head = false;
-        size -= (size < curr_frame_count ? size : curr_frame_count);
         free_frames -= (size < curr_frame_count ? size : curr_frame_count);
+        size -= (size < curr_frame_count ? size : curr_frame_count);
         start_frame += curr_frame_count;
     }
 }
@@ -502,7 +502,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
-    assign_frames(_base_frame_no, _n_frames);
+    assign_frames(_base_frame_no - base_frame_no, _n_frames);
 }
 
 /*

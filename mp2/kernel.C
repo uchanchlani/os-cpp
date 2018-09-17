@@ -54,6 +54,8 @@
 /*--------------------------------------------------------------------------*/
 
 void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go);
+void test_memory_big(ContFramePool * _pool, unsigned int _allocs_to_go);
+void test_memory_reuse(ContFramePool * _pool, unsigned int _allocs_to_go);
 
 /*--------------------------------------------------------------------------*/
 /* MAIN ENTRY INTO THE OS */
@@ -94,6 +96,8 @@ int main() {
     /* -- TEST MEMORY ALLOCATOR */
     
     test_memory(&kernel_mem_pool, 32);
+    test_memory_big(&process_mem_pool, 6);
+    test_memory_reuse(&process_mem_pool, 27);
 
     /* ---- Add code here to test the frame pool implementation. */
     
@@ -130,4 +134,54 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
         ContFramePool::release_frames(frame);
     }
 }
+
+void test_memory_big(ContFramePool * _pool, unsigned int _allocs_to_go) {
+    Console::puts("alloc_to_go = "); Console::puti(_allocs_to_go); Console::puts("\n");
+    if (_allocs_to_go > 0) {
+        int n_frames = 1000;
+        unsigned long frame = _pool->get_frames(n_frames);
+        int * value_array = (int*)(frame * (4 KB));        
+        for (int i = 0; i < (1 KB) * n_frames; i++) {
+            value_array[i] = _allocs_to_go;
+        }
+        test_memory_big(_pool, _allocs_to_go - 1);
+        for (int i = 0; i < (1 KB) * n_frames; i++) {
+            if(value_array[i] != _allocs_to_go){
+                Console::puts("Big MEMORY TEST FAILED. ERROR IN FRAME POOL\n");
+                Console::puts("i ="); Console::puti(i);
+                Console::puts("   v = "); Console::puti(value_array[i]); 
+                Console::puts("   n ="); Console::puti(_allocs_to_go);
+                Console::puts("\n");
+                for(;;); 
+            }
+        }
+        ContFramePool::release_frames(frame);
+    }
+}
+
+
+void test_memory_reuse(ContFramePool * _pool, unsigned int _allocs_to_go) {
+    Console::puts("reuse alloc_to_go = "); Console::puti(_allocs_to_go); Console::puts("\n");
+    if (_allocs_to_go > 0) {
+        int n_frames = 250;
+        unsigned long frame = _pool->get_frames(n_frames);
+        int * value_array = (int*)(frame * (4 KB));        
+        for (int i = 0; i < (1 KB) * n_frames; i++) {
+            value_array[i] = _allocs_to_go * _allocs_to_go;
+        }
+        test_memory_reuse(_pool, _allocs_to_go - 1);
+        for (int i = 0; i < (1 KB) * n_frames; i++) {
+            if(value_array[i] != _allocs_to_go * _allocs_to_go){
+                Console::puts("Big MEMORY TEST FAILED. ERROR IN FRAME POOL\n");
+                Console::puts("i ="); Console::puti(i);
+                Console::puts("   v = "); Console::puti(value_array[i]); 
+                Console::puts("   n ="); Console::puti(_allocs_to_go);
+                Console::puts("\n");
+                for(;;); 
+            }
+        }
+        ContFramePool::release_frames(frame);
+    }
+}
+
 
