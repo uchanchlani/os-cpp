@@ -5,6 +5,9 @@ There has been a sweet mistake, where my virtualbox is committing files with the
 The code changes for the assignment are there in the master branch. Checkpoint till this point is available at branch checkpoint/mp1
 
 ## MP2
-The code changes for the assignment are now on master branch. 
+The code changes for the assignment are now on master branch. Checkpoint till this point is available at checkpoint/mp2
 PS: I've created some more test scenarios with bigger test cases and added it in the kernel.C file.
+
+## MP3
+Initial source files for the mp3 are available in the master branch. Changes for the mp3 sources are availabe at mp3 branch. 
 
