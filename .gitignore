@@ -39,4 +39,8 @@ __MACOSX
 .idea/
 *.iml
 
+CLion files
+CMakeLists.txt
+cmake-build-debug/
+
 *.elf
