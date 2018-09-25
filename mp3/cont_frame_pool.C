@@ -440,14 +440,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
     // add the current pool to our pool manager linked list
 
-    // the way cpp works, the object's constructor must be already called by now
-    // (reason for keeping the constructor generic), we now initialize our object with the desired values
-    curr_pool_manager.init_pool_manager(base_frame_no, _n_frames, this);
-    if(pool_manager == NULL) { // no pools in pool manager, thus initialize the static variable here
-        pool_manager = &curr_pool_manager;
-    } else { // else append it to the end of the pools
-        pool_manager->add_new_pool(&curr_pool_manager);
-    }
+    add_new_pool(this);
 }
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
@@ -512,11 +505,11 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
  */
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
-    if(pool_manager == NULL) {
+    if(head_fp == NULL) {
         error_msg_for_frame_pool();
         return;
     }
-    ContFramePool * curr_pool = pool_manager->get_pool_for_frame(_first_frame_no);
+    ContFramePool * curr_pool = head_fp->get_pool_for_frame(_first_frame_no);
     if (curr_pool == NULL) {
         error_msg_for_frame_pool();
         return;
@@ -535,22 +528,10 @@ unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
     return _n_frames;
 }
 
-PoolManager::PoolManager() {}
-
-void PoolManager::init_pool_manager(unsigned long _base_frame,
-                                    unsigned long _n_frames,
-                                    ContFramePool * _curr_pool)
+ContFramePool * ContFramePool::get_pool_for_frame(unsigned long _curr_frame)
 {
-    base_frame = _base_frame;
-    n_frames = _n_frames;
-    curr_pool = _curr_pool;
-    next = NULL;
-}
-
-ContFramePool * PoolManager::get_pool_for_frame(unsigned long _curr_frame)
-{
-    if (_curr_frame >= base_frame && _curr_frame < (base_frame + n_frames)) {
-        return curr_pool;
+    if (_curr_frame >= base_frame_no && _curr_frame < end_frame_no) {
+        return this;
     } else if (next != NULL) {
         return next->get_pool_for_frame(_curr_frame);
     } else {
@@ -558,12 +539,15 @@ ContFramePool * PoolManager::get_pool_for_frame(unsigned long _curr_frame)
     }
 }
 
-void PoolManager::add_new_pool(PoolManager * pool_manager)
+void ContFramePool::add_new_pool(ContFramePool * pool)
 {
-    PoolManager * last_pool_manager = this;
-    while(last_pool_manager->next != NULL) {
-        last_pool_manager = last_pool_manager->next;
+    if(head_fp == NULL) {
+        head_fp = pool;
     }
-    last_pool_manager->next = pool_manager;
+    ContFramePool * last_pool = head_fp;
+    while(last_pool->next != NULL) {
+        last_pool = last_pool->next;
+    }
+    last_pool->next = pool;
 }
 

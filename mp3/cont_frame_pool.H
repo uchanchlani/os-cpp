@@ -43,54 +43,6 @@
 /* C o n t F r a m e   P o o l  */
 /*--------------------------------------------------------------------------*/
 
-// class pointer required in pool manager
-class ContFramePool;
-
-/*
- * PoolManager
- * Class for managing frame pools
- * stored as a linked list
- * each node of linked list contains:
- * the frame pool's start point and size, pointer to the frame (for direct access)
- * and one next pointer (for the linked list requirement
- */
-class PoolManager {
-private:
-    unsigned long base_frame;
-    unsigned long n_frames;
-    ContFramePool * curr_pool;
-    PoolManager * next;
-
-public:
-    /*
-     * default constructor for pool manager so that I will initialize the
-     * object later
-     */
-    PoolManager();
-
-    /*
-     * initialize the pool manager object. we store the base frame (and size) for
-     * the pool we store. then we store the pointer to the pool to access
-     * it from the manager
-     */
-    void init_pool_manager(unsigned long _base_frame,
-                unsigned long _n_frames,
-                ContFramePool * _curr_pool);
-
-    /*
-     * given a frame no., get which Frame Pool manages it
-     * returns pointer to ContFramePool if found
-     * else NULL
-     */
-    ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
-
-    /*
-     * called from constructor of ContFramePool. Append the newly constructed frame pool
-     * at the end of the linked list of the PoolManager
-     */
-    void add_new_pool(PoolManager * pool_manager);
-};
-
 class ContFramePool {
     
 private:
@@ -99,6 +51,9 @@ private:
     unsigned long end_frame_no;  // end frame no
     unsigned long info_frame_no; // info frame no stored. can be external from the pool or start of the pool
     unsigned long free_frames;   // current no of frames remaining in the pool. helpful in little optimizations
+
+    static void add_new_pool(ContFramePool * pool);
+    ContFramePool * get_pool_for_frame(unsigned long _curr_frame);
 
     /*
      * my bitmap uses 2 bits per frame. I had the choice of either using
@@ -126,12 +81,12 @@ private:
      * PoolManager object, bot the PoolManager only stores the "pointer"
      * to the actual ContFramePool class.
      */
-    PoolManager curr_pool_manager; // to bring this in stack memory
+    ContFramePool * next;
 
     /*
      * Used as the head of the pool manager linked list and hence static
      */
-    static PoolManager * pool_manager;
+    static ContFramePool * head_fp; // This will probably be the kernel frame pool
 
     // private functions block
 
