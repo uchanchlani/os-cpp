@@ -110,7 +110,7 @@
 /*--------------------------------------------------------------------------*/
 
 // initialize the pool manager with 0 frame pools
-PoolManager * ContFramePool::pool_manager = NULL;
+ContFramePool * ContFramePool::head_fp = NULL;
 
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
