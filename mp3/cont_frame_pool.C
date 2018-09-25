@@ -543,6 +543,7 @@ void ContFramePool::add_new_pool(ContFramePool * pool)
 {
     if(head_fp == NULL) {
         head_fp = pool;
+        return;
     }
     ContFramePool * last_pool = head_fp;
     while(last_pool->next != NULL) {
