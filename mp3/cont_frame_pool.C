@@ -439,7 +439,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     }
 
     // add the current pool to our pool manager linked list
-
+    next = NULL;
     add_new_pool(this);
 }
 
