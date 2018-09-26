@@ -10,9 +10,9 @@ ContFramePool * PageTable::kernel_mem_pool = NULL;
 ContFramePool * PageTable::process_mem_pool = NULL;
 unsigned long PageTable::shared_size = 0;
 const unsigned short PageTable::FRAME_OFFSET = calculate_offset(PAGE_SIZE);
-const unsigned short PageTable::ENTRIES_OFFSET = calculate_offset(PAGE_SIZE);
+const unsigned short PageTable::ENTRIES_OFFSET = calculate_offset(ENTRIES_PER_PAGE);
 const unsigned long ZERO = 0;
-const unsigned long PageTable::FRAME_MASK = ((!ZERO) << calculate_offset(PAGE_SIZE));
+const unsigned long PageTable::FRAME_MASK = 0xfffff000;
 
 // just a wrapper function so that I don't write these two lines again and again
 // I hate code duplications you know
@@ -54,7 +54,7 @@ unsigned long * PageTable::get_pd_entry(unsigned long l_addr)
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);
     if(!is_valid_entry(page_directory[entry_number])) {
         unsigned long page_addr = get_new_frame();
-        init_page_table_entries(&page_addr);
+        init_page_table_entries((unsigned long *)page_addr);
         add_frame_to_entry(page_directory, entry_number, page_addr);
     }
     return (unsigned long *) (page_directory[entry_number] & FRAME_MASK);
@@ -106,12 +106,13 @@ PageTable::PageTable()
 void PageTable::load()
 {
     current_page_table = this;
-    write_cr3(*page_directory);
+    write_cr3((unsigned long)page_directory);
     Console::puts("Loaded page table\n");
 }
 
 void PageTable::enable_paging()
 {
+    paging_enabled=1;
     write_cr0(paging_enabled);
     Console::puts("Enabled paging\n");
 }

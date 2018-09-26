@@ -52,10 +52,7 @@ private:
   unsigned long        * page_directory;     /* where is page directory located? */
 
   static unsigned short calculate_offset(unsigned int page_size) {
-      if(page_size == 0) {
-          return 0;
-      }
-      unsigned short ret = 1;
+      unsigned short ret = 0;
       while ((page_size = page_size >> 1) > 0)
           ret ++;
       return ret;
