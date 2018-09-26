@@ -112,7 +112,7 @@ void PageTable::load()
 
 void PageTable::enable_paging()
 {
-    write_cr0(1);
+    write_cr0(paging_enabled);
     Console::puts("Enabled paging\n");
 }
 
@@ -131,7 +131,7 @@ void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entr
 
 void PageTable::init_page_table_entries(unsigned long * page_table) {
     // initialize all the page table pages to invalid
-    for(int i = 0; i < ENTRIES_PER_PAGE) {
+    for(int i = 0; i < ENTRIES_PER_PAGE; i++) {
         page_table[i] = 0x00; // main agenda is to set the last bit which is the invalid bit as 0.
                               // I don't really care about the other bits as of now
     }
