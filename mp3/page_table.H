@@ -51,11 +51,33 @@ private:
   /* DATA FOR CURRENT PAGE TABLE */
   unsigned long        * page_directory;     /* where is page directory located? */
 
+  static unsigned short calculate_offset(unsigned int page_size) {
+      if(page_size == 0) {
+          return 0;
+      }
+      unsigned short ret = 1;
+      while ((page_size = page_size >> 1) > 0)
+          ret ++;
+      return ret;
+  }
+
+  void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr);
+  void init_page_table_entries(unsigned long frame_addr);
+  unsigned long get_new_frame();
+  bool is_valid_entry(unsigned long page_entry);
+  unsigned long * get_pd_entry(unsigned long l_addr);
+  unsigned long get_page_entry(unsigned long * page_table, unsigned long l_addr);
+  void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr);
+  void map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
+
 public:
-  static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE; 
+  static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;
+  static const unsigned short FRAME_OFFSET;
   /* in bytes */
-  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE; 
+  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE;
+  static const unsigned short ENTRIES_OFFSET;
   /* in entries, duh! */
+  static const unsigned long FRAME_MASK;
 
   static void init_paging(ContFramePool * _kernel_mem_pool,
                           ContFramePool * _process_mem_pool,
