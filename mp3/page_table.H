@@ -62,13 +62,13 @@ private:
   }
 
   void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr);
-  void init_page_table_entries(unsigned long frame_addr);
+  void init_page_table_entries(unsigned long * page_table);
   unsigned long get_new_frame();
   bool is_valid_entry(unsigned long page_entry);
   unsigned long * get_pd_entry(unsigned long l_addr);
   unsigned long get_page_entry(unsigned long * page_table, unsigned long l_addr);
   void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr);
-  void map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
+  void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
 public:
   static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;

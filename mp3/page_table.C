@@ -33,7 +33,7 @@ bool PageTable::is_valid_entry(unsigned long page_entry)
     return (page_entry & 1);
 }
 
-void PageTable::map_memory(unsigned long l_addr_start, unsigned long l_addr_end) // both should be aligned with frame size
+void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end) // both should be aligned with frame size
 {
     l_addr_start = l_addr_start & FRAME_MASK;
     l_addr_end = l_addr_end & FRAME_MASK;
@@ -54,7 +54,7 @@ unsigned long * PageTable::get_pd_entry(unsigned long l_addr)
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);
     if(!is_valid_entry(page_directory[entry_number])) {
         unsigned long page_addr = get_new_frame();
-        init_page_table_entries(page_addr);
+        init_page_table_entries(&page_addr);
         add_frame_to_entry(page_directory, entry_number, page_addr);
     }
     return (unsigned long *) (page_directory[entry_number] & FRAME_MASK);
@@ -95,13 +95,9 @@ PageTable::PageTable()
 {
     page_directory = (unsigned long *) get_new_frame();
 
-    init_page_table_entries(*page_directory);
+    init_page_table_entries(page_directory);
 
-    // now let's get one frame for the actual page table entries
-    unsigned long page_frame_no = kernel_mem_pool->get_frames(1);
-    unsigned long * page_table_page = (unsigned long * ) (page_frame_no << FRAME_OFFSET);
-
-
+    direct_map_memory(0, shared_size);
 
     Console::puts("Constructed Page Table object\n");
 }
@@ -116,11 +112,16 @@ void PageTable::load()
 
 void PageTable::enable_paging()
 {
+    write_cr0(1);
     Console::puts("Enabled paging\n");
 }
 
 void PageTable::handle_fault(REGS * _r)
 {
+    unsigned long faulty_l_addr = read_cr2();
+    current_page_table->get_page_entry(
+            current_page_table->get_pd_entry(faulty_l_addr),
+            faulty_l_addr);
     Console::puts("handled page fault\n");
 }
 
@@ -128,8 +129,7 @@ void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entr
     page_table[entry_number] = (frame_addr & FRAME_MASK) | 0x07;
 }
 
-void PageTable::init_page_table_entries(unsigned long frame_addr) {
-    unsigned long * page_table = (unsigned long *) frame_addr;
+void PageTable::init_page_table_entries(unsigned long * page_table) {
     // initialize all the page table pages to invalid
     for(int i = 0; i < ENTRIES_PER_PAGE) {
         page_table[i] = 0x00; // main agenda is to set the last bit which is the invalid bit as 0.
