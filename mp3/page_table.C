@@ -13,16 +13,14 @@ const unsigned short PageTable::FRAME_OFFSET = calculate_offset(PAGE_SIZE);
 const unsigned short PageTable::ENTRIES_OFFSET = calculate_offset(ENTRIES_PER_PAGE);
 const unsigned long ZERO = 0;
 const unsigned long PageTable::FRAME_MASK = 0xfffff000;
+const PageAttributes PageAttributes::DEFAULT_USER_PAGE(true, true);
+const PageAttributes PageAttributes::DEFAULT_SUPERVISOR_PAGE(true, false);
+const PageAttributes PageAttributes::NOT_PRESENT_USER_PAGE = *PageAttributes(true, true).unmark_valid();
+const PageAttributes PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE = *PageAttributes(true, false).unmark_valid();
 
 // just a wrapper function so that I don't write these two lines again and again
 // I hate code duplications you know
-void error_msg()
-{
-    Console::puts("Error, unexpected behaviour identified\n");
-    assert(false);
-}
-
-void error_msg(const char * msg)
+void error_msg(const char * msg = "Error, unexpected behaviour identified\n")
 {
     Console::puts(msg);
     assert(false);
@@ -45,36 +43,36 @@ void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_ad
             pd_entry = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);
             curr_pd_entry = get_pd_entry(l_addr);
         }
-        set_page_entry(curr_pd_entry, l_addr, l_addr);
+        set_page_entry(curr_pd_entry, l_addr, l_addr, PageAttributes::DEFAULT_SUPERVISOR_PAGE);
     }
 }
 
-unsigned long * PageTable::get_pd_entry(unsigned long l_addr) 
+unsigned long * PageTable::get_pd_entry(unsigned long l_addr)
 {
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);
     if(!is_valid_entry(page_directory[entry_number])) {
         unsigned long page_addr = get_new_frame();
-        init_page_table_entries((unsigned long *)page_addr);
-        add_frame_to_entry(page_directory, entry_number, page_addr);
+        init_page_table_entries((unsigned long *)page_addr, PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
+        add_frame_to_entry(page_directory, entry_number, page_addr, PageAttributes::DEFAULT_SUPERVISOR_PAGE);
     }
     return (unsigned long *) (page_directory[entry_number] & FRAME_MASK);
 }
 
-unsigned long PageTable::get_page_entry(unsigned long * page_table, unsigned long l_addr) 
+//unsigned long PageTable::get_page_entry(unsigned long * page_table, unsigned long l_addr)
+//{
+//    unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
+//    if(!is_valid_entry(page_table[entry_number])) {
+//        unsigned long page_addr = get_new_frame();
+//        add_frame_to_entry(page_table, entry_number, page_addr);
+//    }
+//    return (page_table[entry_number] & FRAME_MASK);
+//}
+//
+void PageTable::set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes)
 {
     unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
     if(!is_valid_entry(page_table[entry_number])) {
-        unsigned long page_addr = get_new_frame();
-        add_frame_to_entry(page_table, entry_number, page_addr);
-    }
-    return (page_table[entry_number] & FRAME_MASK);
-}
-
-void PageTable::set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr) 
-{
-    unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
-    if(!is_valid_entry(page_table[entry_number])) {
-        add_frame_to_entry(page_table, entry_number, p_addr);
+        add_frame_to_entry(page_table, entry_number, p_addr, attributes);
     } else { // I can release the frame back to the frame pool as well
              // , but where did the frame came from. I'll choose to panic as of now till it is not clear
         error_msg();
@@ -95,7 +93,7 @@ PageTable::PageTable()
 {
     page_directory = (unsigned long *) get_new_frame();
 
-    init_page_table_entries(page_directory);
+    init_page_table_entries(page_directory, PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
 
     direct_map_memory(0, shared_size);
 
@@ -120,28 +118,34 @@ void PageTable::enable_paging()
 void PageTable::handle_fault(REGS * _r)
 {
     unsigned long faulty_l_addr = read_cr2();
-    current_page_table->get_page_entry(
-            current_page_table->get_pd_entry(faulty_l_addr),
-            faulty_l_addr);
+    unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr);
+    current_page_table->set_page_entry(
+            page_table,
+            faulty_l_addr,
+            get_new_frame(false),
+            PageAttributes::DEFAULT_SUPERVISOR_PAGE);
     Console::puts("handled page fault\n");
 }
 
-void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entry_number, unsigned long frame_addr) {
-    page_table[entry_number] = (frame_addr & FRAME_MASK) | 0x07;
+void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entry_number, unsigned long frame_addr, const PageAttributes &attributes) {
+    page_table[entry_number] = (frame_addr & FRAME_MASK) | attributes.get_offset_value();
 }
 
-void PageTable::init_page_table_entries(unsigned long * page_table) {
+void PageTable::init_page_table_entries(unsigned long * page_table, const PageAttributes &attributes) {
     // initialize all the page table pages to invalid
     for(int i = 0; i < ENTRIES_PER_PAGE; i++) {
-        page_table[i] = 0x00; // main agenda is to set the last bit which is the invalid bit as 0.
-                              // I don't really care about the other bits as of now
+        page_table[i] = attributes.get_offset_value();
     }
 }
 
-unsigned long PageTable::get_new_frame() {
-    unsigned long frame_no = kernel_mem_pool->get_frames(1);
+unsigned long PageTable::get_new_frame(bool kernel)     {
+    ContFramePool * currFramePool = kernel_mem_pool;
+    if(!kernel) {
+        currFramePool = process_mem_pool;
+    }
+    unsigned long frame_no = currFramePool->get_frames(1);
     if(frame_no == 0) {
-        error_msg("Kernel out of frames Not a good sign\n");
+        error_msg("Curr frame pool out of frames Not a good sign\n");
     }
     return frame_no * PAGE_SIZE;
 }

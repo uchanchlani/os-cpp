@@ -37,6 +37,45 @@
 /* P A G E - T A B L E  */
 /*--------------------------------------------------------------------------*/
 
+class PageAttributes {
+private:
+    bool valid;
+    bool rw;
+    bool umode;
+
+public:
+    // some frequently used statics
+    static const PageAttributes DEFAULT_USER_PAGE;          // 111
+    static const PageAttributes DEFAULT_SUPERVISOR_PAGE;    // 011
+    static const PageAttributes NOT_PRESENT_USER_PAGE;      // 110
+    static const PageAttributes NOT_PRESENT_SUPERVISOR_PAGE;// 010
+
+    PageAttributes(bool _rw, bool _umode) : rw (_rw), umode (_umode), valid(true) {};
+    PageAttributes * mark_valid() {this->valid = true; return this;}
+    PageAttributes * unmark_valid() {this->valid = false; return this;}
+    PageAttributes * mark_rw() {this->rw = true; return this;}
+    PageAttributes * unmark_rw() {this->rw = false; return this;}
+    PageAttributes * mark_umode() {this->umode = true; return this;}
+    PageAttributes * unmark_umode() {this->umode = false; return this;}
+    bool is_valid() const {return this->valid;}
+    bool is_rw() const {return this->rw;}
+    bool is_umode() const {return this->umode;}
+
+    unsigned int get_offset_value() const {
+        unsigned int offset_value = 0x00;
+        if(this->is_valid()) {
+            offset_value = offset_value | 0x1;
+        }
+        if(this->is_rw()) {
+            offset_value = offset_value | 0x2;
+        }
+        if(this->is_umode()) {
+            offset_value = offset_value | 0x4;
+        }
+        return offset_value;
+    }
+};
+
 class PageTable {
 
 private:
@@ -51,6 +90,10 @@ private:
   /* DATA FOR CURRENT PAGE TABLE */
   unsigned long        * page_directory;     /* where is page directory located? */
 
+  /*
+   * Calculates the offset bits of the given size
+   * For ex: page size 4096 returns 12 and and number of page 1024 returns 10
+   */
   static unsigned short calculate_offset(unsigned int page_size) {
       unsigned short ret = 0;
       while ((page_size = page_size >> 1) > 0)
@@ -58,13 +101,15 @@ private:
       return ret;
   }
 
-  void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr);
-  void init_page_table_entries(unsigned long * page_table);
-  unsigned long get_new_frame();
+  // given a page table (can be a page directory page as well), and the location of the page, and the actual frame address and it's attributes, update the page entry
+  void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr, const PageAttributes &attributes);
+  // init page table entries with the given page attributes (generally will be blank page entries)
+  void init_page_table_entries(unsigned long * page_table, const PageAttributes &attributes);
+  // get a new frame pool, either from kernel or process pool memory
+  static unsigned long get_new_frame(bool kernel = true);
   bool is_valid_entry(unsigned long page_entry);
   unsigned long * get_pd_entry(unsigned long l_addr);
-  unsigned long get_page_entry(unsigned long * page_table, unsigned long l_addr);
-  void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr);
+  void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes);
   void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
 public:
