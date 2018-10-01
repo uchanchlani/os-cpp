@@ -13,6 +13,8 @@
 #ifndef _page_table_H_                   // include file only once
 #define _page_table_H_
 
+#define DEBUG_MODE
+
 /*--------------------------------------------------------------------------*/
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
@@ -101,23 +103,49 @@ private:
       return ret;
   }
 
+  // given a page entry check if it is valid or not
+  bool is_valid_entry(unsigned long page_entry);
+
+  // get a new frame pool, either from kernel or process pool memory by default kernel pool
+  static unsigned long get_new_frame(bool kernel = true);
+
   // given a page table (can be a page directory page as well), and the location of the page, and the actual frame address and it's attributes, update the page entry
   void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr, const PageAttributes &attributes);
+
+  /*
+   * given a page table page (ps don't give the page directory page please, it will mess up)
+   * it sets the entry number pointed by bits 21-12 of the logical address with the actual physical address with the given attributes.
+   * as of this assignment, we are only assigning a page as read write, supervisor mode valid page
+   * Note the differences with the add_frame_to_entry function.
+   * This function internally calls the add_frame_to_entry function for the core functionality of adding the pages
+   */
+  void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes);
+
   // init page table entries with the given page attributes (generally will be blank page entries)
   void init_page_table_entries(unsigned long * page_table, const PageAttributes &attributes);
-  // get a new frame pool, either from kernel or process pool memory
-  static unsigned long get_new_frame(bool kernel = true);
-  bool is_valid_entry(unsigned long page_entry);
+
+  /*
+   * get the page directory entry for the given logical address
+   * the way it works is it gets the upper 10 bits from the address and considers it as the entry number
+   * then access the page directory entry. If the directory entry is invalid, it will fetch a new page from the
+   * kernel pool and assign it as a page table page for the given entry, initialize the entry with all invalids, supervisor mode read write pages
+   * and return the address of the page table page
+   */
   unsigned long * get_pd_entry(unsigned long l_addr);
-  void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes);
+
+  /*
+   * A utility function to direct map logical address space to the actual physical memory.
+   * Should be called only before the paging is disabled.
+   * In this context we are calling it only to direct map the first 4 MB of our memory
+   */
   void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
 public:
   static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;
-  static const unsigned short FRAME_OFFSET;
+  static const unsigned short FRAME_OFFSET; // value 12 (length of bits used for page size)
   /* in bytes */
   static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE;
-  static const unsigned short ENTRIES_OFFSET;
+  static const unsigned short ENTRIES_OFFSET; // vaule 10 (length of bits used for page entires)
   /* in entries, duh! */
   static const unsigned long FRAME_MASK;
 

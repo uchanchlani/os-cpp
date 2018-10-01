@@ -50,9 +50,12 @@
 #define FAULT_ADDR (4 MB)
 /* used in the code later as address referenced to cause page faults. */
 #define NACCESS ((1 MB) / 4)
+/* NACCESS integer access (i.e. 4 bytes in each access) are made starting at address FAULT_ADDR */
+
 #define FAULT_2 (1 GB)
 #define NACCESS2 ((8 MB) / 4)
-/* NACCESS integer access (i.e. 4 bytes in each access) are made starting at address FAULT_ADDR */
+// I'd like to test a bigger block
+// PS it will print a lot of debug statements as we will have a lot of page faults from my page table files. If you need to turn it off for your testing please comment out line 16 of page_table.H
 
 /*--------------------------------------------------------------------------*/
 /* MAIN ENTRY INTO THE OS */
@@ -183,7 +186,7 @@ int main() {
         foo2[j] = j;
     }
 
-    Console::puts("DONE WRITING TO MEMORY. Now testing...\n");
+    Console::puts("DONE WRITING TO MEMORY FOR BOTH THE CASES. Now testing...\n");
 
     for (i=0; i<NACCESS; i++) {
         if(foo[i] != i) {
@@ -194,7 +197,7 @@ int main() {
         }
     }
     if(i == NACCESS) {
-        Console::puts("TEST PASSED\n");
+        Console::puts("TEST PASSED. SMALL CASE\n");
     }
 
     for (j=0; j<NACCESS2; j++) {
@@ -206,7 +209,7 @@ int main() {
         }
     }
     if(j == NACCESS2) {
-        Console::puts("TEST PASSED\n");
+        Console::puts("TEST PASSED. LARGE SPACE \n");
     }
 
     /* -- STOP HERE */
