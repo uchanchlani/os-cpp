@@ -34,6 +34,7 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
+#define GB * (0x1 << 30)
 #define MB * (0x1 << 20)
 #define KB * (0x1 << 10)
 #define KERNEL_POOL_START_FRAME ((2 MB) / Machine::PAGE_SIZE)
@@ -49,6 +50,8 @@
 #define FAULT_ADDR (4 MB)
 /* used in the code later as address referenced to cause page faults. */
 #define NACCESS ((1 MB) / 4)
+#define FAULT_2 (1 GB)
+#define NACCESS2 ((8 MB) / 4)
 /* NACCESS integer access (i.e. 4 bytes in each access) are made starting at address FAULT_ADDR */
 
 /*--------------------------------------------------------------------------*/
@@ -173,6 +176,13 @@ int main() {
         foo[i] = i;
     }
 
+    int *foo2 = (int *) FAULT_2;
+    int j;
+
+    for (j=0; j<NACCESS2; j++) {
+        foo2[j] = j;
+    }
+
     Console::puts("DONE WRITING TO MEMORY. Now testing...\n");
 
     for (i=0; i<NACCESS; i++) {
@@ -184,6 +194,18 @@ int main() {
         }
     }
     if(i == NACCESS) {
+        Console::puts("TEST PASSED\n");
+    }
+
+    for (j=0; j<NACCESS2; j++) {
+        if(foo2[j] != j) {
+            Console::puts("TEST FAILED for access number:");
+            Console::putui(j);
+            Console::puts("\n");
+            break;
+        }
+    }
+    if(j == NACCESS2) {
         Console::puts("TEST PASSED\n");
     }
 

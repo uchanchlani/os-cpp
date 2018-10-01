@@ -118,12 +118,18 @@ void PageTable::enable_paging()
 void PageTable::handle_fault(REGS * _r)
 {
     unsigned long faulty_l_addr = read_cr2();
+    Console::puts("Page fault for address ");
+    Console::puti(faulty_l_addr);
+    Console::puts("\n");
     unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr);
+    unsigned long frame = get_new_frame(false);
     current_page_table->set_page_entry(
             page_table,
             faulty_l_addr,
-            get_new_frame(false),
+            frame,
             PageAttributes::DEFAULT_SUPERVISOR_PAGE);
+    Console::puts("Alloted frame ");
+    Console::puti(frame);
     Console::puts("handled page fault\n");
 }
 
