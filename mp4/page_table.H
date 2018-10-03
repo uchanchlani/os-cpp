@@ -141,6 +141,17 @@ private:
     */
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
+    unsigned long get_pde_entry_virtual_addr(unsigned long vaddr) {
+        return (1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+                1023 << FRAME_OFFSET &
+                ((vaddr >> (ENTRIES_OFFSET + FRAME_OFFSET)) << 2)); // 1 way of masking the last 2 bits
+    }
+
+    unsigned long get_pte_entry_virtual_addr(unsigned long vaddr) {
+        return (1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+                ((vaddr >> (ENTRIES_OFFSET + FRAME_OFFSET)) << FRAME_OFFSET));
+    }
+
 public:
     static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;
     static const unsigned short FRAME_OFFSET; // value 12 (length of bits used for page size)
