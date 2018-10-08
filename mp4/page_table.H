@@ -146,7 +146,7 @@ private:
         if(!paging_enabled) {
             return page_directory;
         }
-        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) |
                 1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
     }
 
@@ -155,7 +155,7 @@ private:
             return get_pd_entry(l_addr);
         }
         unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
-        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) |
                 (entry_number << FRAME_OFFSET));
     }
 

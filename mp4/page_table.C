@@ -114,6 +114,9 @@ PageTable::PageTable()
     page_directory = (unsigned long *) get_new_frame(false);                                     // get new frame for page directory
 
     init_page_table_entries(get_pd_addr(), PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to invalid
+    PageAttributes attributes = PageAttributes::DEFAULT_SUPERVISOR_PAGE;
+    attributes.unmark_rw();
+    add_frame_to_entry(get_pd_addr(), 1023, (unsigned long)page_directory, attributes);
 
     direct_map_memory(0, shared_size);                                                      // do the direct mapping of the shared space
 
