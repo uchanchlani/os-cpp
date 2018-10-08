@@ -17,6 +17,8 @@ const PageAttributes PageAttributes::DEFAULT_USER_PAGE(true, true);
 const PageAttributes PageAttributes::DEFAULT_SUPERVISOR_PAGE(true, false);
 const PageAttributes PageAttributes::NOT_PRESENT_USER_PAGE = *PageAttributes(true, true).unmark_valid();
 const PageAttributes PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE = *PageAttributes(true, false).unmark_valid();
+VMPool ** PageTable::all_vm_pools = NULL;
+unsigned long PageTable::vm_pools_count = 0;
 
 // just a wrapper function so that I don't write these two lines again and again
 // I hate code duplications you know
@@ -37,7 +39,12 @@ unsigned long PageTable::get_new_frame(bool kernel)
     if(!kernel) {
         currFramePool = process_mem_pool;                           // if explicitly asked get it from user memory
     }
-    unsigned long frame_no = currFramePool->get_frames(1);
+    return get_new_frame(currFramePool);
+}
+
+unsigned long PageTable::get_new_frame(ContFramePool * curr_pool)
+{
+    unsigned long frame_no = curr_pool->get_frames(1);
     if(frame_no == 0) {                                             // if the frame is invalid let's panic
         error_msg("Curr frame pool out of frames Not a good sign\n");
     }
@@ -98,6 +105,15 @@ void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_ad
     }
 }
 
+ContFramePool * PageTable::check_validity_of_page(unsigned long vaddr) {
+    for(unsigned int i = 0; i < vm_pools_count; ++i) {
+        if(all_vm_pools[i]->is_legitimate(vaddr)) {
+            return all_vm_pools[i]->get_frame_pool();
+        }
+    }
+    return nullptr;
+}
+
 void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
                             ContFramePool * _process_mem_pool,
                             const unsigned long _shared_size)
@@ -147,8 +163,13 @@ void PageTable::handle_fault(REGS * _r)
     Console::puti(faulty_l_addr);
     Console::puts("\n");
 #endif
-    unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr);
-    unsigned long frame = get_new_frame(false);
+    ContFramePool * curr_frame_pool = current_page_table->check_validity_of_page(faulty_l_addr);
+    if(!curr_frame_pool) {
+        error_msg("Page fault not valid");
+        return;
+    }
+    unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr); // Now it acts just as a checker, if the page table entry doesn't exist, just creates it
+    unsigned long frame = get_new_frame(curr_frame_pool);
     current_page_table->set_page_entry(
             current_page_table->get_pt_addr(faulty_l_addr),
             faulty_l_addr,
@@ -164,11 +185,22 @@ void PageTable::handle_fault(REGS * _r)
 
 void PageTable::register_pool(VMPool * _vm_pool)
 {
-    assert(false);
+    if(vm_pools_count == 0) {
+        all_vm_pools = (VMPool ** ) get_new_frame(true); // get a kernel frame. because it is direct mapped, no worries, as Prof says, "WORKS LIKE A CHARM!"
+    }
+    all_vm_pools[vm_pools_count] = _vm_pool;
+    vm_pools_count++;
     Console::puts("registered VM pool\n");
 }
 
-void PageTable::free_page(unsigned long _page_no) {
-    assert(false);
+void PageTable::free_page(unsigned long _page_no)
+{
+    unsigned long free_addr = _page_no << FRAME_OFFSET;
+    set_page_entry(
+            get_pt_addr(free_addr),
+            free_addr,
+            0x00,
+            PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
+    flush_tlb();
     Console::puts("freed page\n");
 }

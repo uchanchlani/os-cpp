@@ -93,6 +93,8 @@ private:
     
     /* DATA FOR CURRENT PAGE TABLE */
     unsigned long        * page_directory;     /* where is page directory located? */
+    static VMPool ** all_vm_pools;              /* list of all vm pools pointers, simplified version as compared to linked lists */
+    static unsigned long vm_pools_count;       /* this will start with 0, just saves us the hastle of traversing the list sometimes */
     
     /*
     * Calculates the offset bits of the given size
@@ -110,6 +112,7 @@ private:
 
     // get a new frame pool, either from kernel or process pool memory by default kernel pool
     static unsigned long get_new_frame(bool kernel = true);
+    static unsigned long get_new_frame(ContFramePool * curr_pool);
 
     // given a page table (can be a page directory page as well), and the location of the page, and the actual frame address and it's attributes, update the page entry
     void add_frame_to_entry(unsigned long * page_table, unsigned long entry_number, unsigned long frame_addr, const PageAttributes &attributes);
@@ -141,6 +144,8 @@ private:
     * In this context we are calling it only to direct map the first 4 MB of our memory
     */
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
+
+    ContFramePool * check_validity_of_page(unsigned long vaddr);
 
     unsigned long * get_pd_addr() {
         if(!paging_enabled) {
