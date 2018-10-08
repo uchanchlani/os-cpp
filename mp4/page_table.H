@@ -143,11 +143,17 @@ private:
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
     static unsigned long get_pde_virtual_addr() {
+        if(!paging_enabled) {
+            return (unsigned long)current_page_table->page_directory;
+        }
         return (unsigned long)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
                 1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
     }
 
     static unsigned long get_pte_virtual_addr(unsigned long l_addr) {
+        if(!paging_enabled) {
+            return l_addr;
+        }
         unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
         return (1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
                 (entry_number << FRAME_OFFSET));
