@@ -142,20 +142,20 @@ private:
     */
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
-    static unsigned long get_pde_virtual_addr() {
+    unsigned long * get_pd_addr() {
         if(!paging_enabled) {
-            return (unsigned long)current_page_table->page_directory;
+            return page_directory;
         }
-        return (unsigned long)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
                 1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
     }
 
-    static unsigned long get_pte_virtual_addr(unsigned long l_addr) {
+    unsigned long * get_pt_addr(unsigned long l_addr) {
         if(!paging_enabled) {
-            return (unsigned long)current_page_table->get_pd_entry(l_addr);
+            return get_pd_entry(l_addr);
         }
         unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
-        return (1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
+        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
                 (entry_number << FRAME_OFFSET));
     }
 

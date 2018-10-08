@@ -72,13 +72,14 @@ void PageTable::init_page_table_entries(unsigned long * page_table, const PageAt
 unsigned long * PageTable::get_pd_entry(unsigned long l_addr)
 {
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
-    if(!is_valid_entry(page_directory[entry_number])) {                                                     // if not valid entry, we get a page from process pool and assign it to page table page
+    unsigned long * logical_page_directory = get_pd_addr();
+    if(!is_valid_entry(logical_page_directory[entry_number])) {                                                     // if not valid entry, we get a page from process pool and assign it to page table page
         unsigned long page_addr = get_new_frame(false);
-        add_frame_to_entry(page_directory, entry_number, page_addr, PageAttributes::DEFAULT_SUPERVISOR_PAGE);// add the page table page entry in the page directory
-        init_page_table_entries((unsigned long *)get_pte_virtual_addr(l_addr),
+        add_frame_to_entry(logical_page_directory, entry_number, page_addr, PageAttributes::DEFAULT_SUPERVISOR_PAGE);// add the page table page entry in the page directory
+        init_page_table_entries(get_pt_addr(l_addr),
                 PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to SUPERVISOR READ/WRITE and INVALID
     }
-    return (unsigned long *) (page_directory[entry_number] & FRAME_MASK);                                   // after optionally assigning the page table page and setting it to the page directory, we return it by adding frame mask
+    return (unsigned long *) (logical_page_directory[entry_number] & FRAME_MASK);                                   // after optionally assigning the page table page and setting it to the page directory, we return it by adding frame mask
 }
 
 void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end) // both should be aligned with frame size
@@ -112,7 +113,7 @@ PageTable::PageTable()
     // Now we move the page_directory to the process pool as well
     page_directory = (unsigned long *) get_new_frame(false);                                     // get new frame for page directory
 
-    init_page_table_entries(page_directory, PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to invalid
+    init_page_table_entries(get_pd_addr(), PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to invalid
 
     direct_map_memory(0, shared_size);                                                      // do the direct mapping of the shared space
 
@@ -146,7 +147,7 @@ void PageTable::handle_fault(REGS * _r)
     unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr);
     unsigned long frame = get_new_frame(false);
     current_page_table->set_page_entry(
-            (unsigned long *)get_pte_virtual_addr(faulty_l_addr),
+            current_page_table->get_pt_addr(faulty_l_addr),
             faulty_l_addr,
             frame,
             PageAttributes::DEFAULT_SUPERVISOR_PAGE);
