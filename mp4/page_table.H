@@ -152,7 +152,7 @@ private:
 
     static unsigned long get_pte_virtual_addr(unsigned long l_addr) {
         if(!paging_enabled) {
-            return l_addr;
+            return (unsigned long)current_page_table->get_pd_entry(l_addr);
         }
         unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
         return (1023 << (ENTRIES_OFFSET + FRAME_OFFSET) &
