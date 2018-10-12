@@ -1,7 +1,7 @@
 /*
  File: vm_pool.C
  
- Author:
+ Author: Utkarsh Chanchlani
  Date  :
  
  */
@@ -53,15 +53,33 @@ void error_msg(const char * msg = "Error, unexpected behaviour identified\n")
     assert(false);
 }
 
+// The idea is to use a hashing function but as we don't have standard libraries to use,
+// I wrote a short and sweet hash number generator. It does the job as of now
+// But obviously this is very biased, will produce repeated values, is not guaranteed to generate
+// values with equal probabilities and what not
+// ........BUT.......
+// this is perfect for the demonstration purposes
 unsigned long VMPool::calculate_hash(unsigned long _size)
 {
-    _hash_seed = _hash_seed * _hash_seed + (_hash_seed >> 1); // with only first arg, we may get only negs or positives
+    // with only first arg, we may get only odds or evens
+    _hash_seed = _hash_seed * _hash_seed + (_hash_seed >> 1);
     return _hash_seed % _size;
+}
+
+template <class T>
+void _swap(T& a, T& b) {
+    T temp = a;
+    a = b;
+    b = temp;
 }
 
 bool is_overlap(unsigned long start1, unsigned long end1, unsigned long start2, unsigned long end2)
 {
-    // todo complete this function and good night
+    if(start2 < start1) {
+        _swap(start1, start2);
+        _swap(end1, end2);
+    }
+    return end1 > start2;
 }
 
 bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_pages)
@@ -72,13 +90,11 @@ bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_
         if(assgns_left <= 0) {
             return true;
         }
-        if(assigned_frames[2*i] == 0) {
+        if(assigned_frames[2*i] == FREE_SPACE) {
             continue;
         }
         unsigned long start = assigned_frames[2*1], end = assigned_frames[2*i + 1];
-        // todo: check this code line
-        if((start >= _start_page && start < (_start_page + _num_pages)) ||
-           (end > _start_page && end <= (_start_page + _num_pages))) {
+        if(is_overlap(start, end, _start_page, _start_page + _num_pages)) {
             return false;
         }
         assgns_left--;
@@ -90,15 +106,23 @@ void VMPool::assign_pages(unsigned long _start_page, unsigned long _num_pages)
 {
     unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
     for(unsigned int i = 0; i < size; ++i) {
-        if(assigned_frames[2*i] == 0) {
+        if(assigned_frames[2*i] == FREE_SPACE) {
             assigned_frames[2*i] = _start_page;
             assigned_frames[2*i + 1] = _start_page + _num_pages;
             total_assgns++;
+            return;
         }
     }
-    error_msg("No space left in the vm pool manager table. Will panic as of now");
+    error_msg("No space left in the vm pool manager table. Will panic as of now\n");
 }
 
+void VMPool::init_pool(unsigned long *bitmap, unsigned int size)
+{
+    for(unsigned int i = 0; i < size; ++i) {
+        bitmap[2*i] = FREE_SPACE;
+        bitmap[2*i+1] = FREE_SPACE;
+    }
+}
 
 VMPool::VMPool(unsigned long  _base_address,
                unsigned long  _size,
@@ -113,6 +137,7 @@ VMPool::VMPool(unsigned long  _base_address,
 
     _hash_seed = 2147483647; // some prime number
     assigned_frames = (unsigned long *)(start_page << PageTable::FRAME_OFFSET);
+    init_pool(assigned_frames, PageTable::PAGE_SIZE / sizeof(unsigned long) / 2);
     assigned_frames[0] = start_page;
     assigned_frames[1] = 1;
     total_assgns++;
@@ -129,9 +154,12 @@ unsigned long VMPool::allocate(unsigned long _size) {
         if(check_feasible_assgn(start, _size))
             break;
         start = 0;
+        Console::puts("WARN -> Iter (");
+        Console::puti((unsigned int)i);
+        Console::puts("): Your hash function returned same value\n");
     }
     if(start == 0) {
-        error_msg("Hashing function is not so good dude");
+        error_msg("Hashing function is not so good dude\n");
         return 0;
     }
     assign_pages(start, _size);
@@ -139,16 +167,18 @@ unsigned long VMPool::allocate(unsigned long _size) {
 }
 
 void VMPool::release(unsigned long _start_address) {
-    unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long);
-    for(unsigned int i = 0; i < size; i += 2) {
+    unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
+    for(unsigned int i = 0; i < size; ++i) {
         if(assigned_frames[i] == _start_address >> PageTable::FRAME_OFFSET) {
             for(unsigned long page = assigned_frames[i]; page < assigned_frames[i+1]; ++page) {
                 page_table->free_page(page);
             }
+            assigned_frames[2*i] = FREE_SPACE;
+            assigned_frames[2*i+1] = FREE_SPACE;
             return;
         }
     }
-    error_msg("Panic as the release request is not legitimate. The code block should never reach here");
+    error_msg("Panic as the release request is not legitimate. The code block should never reach here\n");
 }
 
 bool VMPool::is_legitimate(unsigned long _address) {

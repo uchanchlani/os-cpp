@@ -18,6 +18,8 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
+#define FREE_SPACE 0
+
 /* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
@@ -45,7 +47,11 @@ private:
     unsigned long start_page;
     unsigned long num_pages;
     PageTable * page_table;
-    unsigned long * assigned_frames; // data structure, odd placeholders store start address, the corresponding even placeholders store end address (exclusive)
+
+    // data structure, odd placeholders store start address,
+    // the corresponding even placeholders store end address (exclusive)
+    unsigned long * assigned_frames;
+
     unsigned long total_assgns;
 
     unsigned long _hash_seed;
@@ -53,6 +59,7 @@ private:
     unsigned long calculate_hash(unsigned long _size);
     bool check_feasible_assgn(unsigned long _start_page, unsigned long _num_pages);
     void assign_pages(unsigned long _start_page, unsigned long _num_pages);
+    void init_pool(unsigned long* bitmap, unsigned int size);
 
 public:
     ContFramePool * get_frame_pool() {
