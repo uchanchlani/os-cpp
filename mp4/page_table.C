@@ -66,7 +66,7 @@ void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entr
 void PageTable::set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes)
 {
     unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
-    if(!is_valid_entry(page_table[entry_number])) {
+    if(true || !is_valid_entry(page_table[entry_number])) {
         add_frame_to_entry(page_table, entry_number, p_addr, attributes);
     } else { // I can release the frame back to the frame pool as well
              // , but where did the frame came from is the question to ask. I guess I'll get the answer in mp4
@@ -118,7 +118,7 @@ ContFramePool * PageTable::check_validity_of_page(unsigned long vaddr) {
             return all_vm_pools[i]->get_frame_pool();
         }
     }
-    return nullptr;
+    return NULL;
 }
 
 void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
@@ -172,7 +172,7 @@ void PageTable::handle_fault(REGS * _r)
 #endif
     ContFramePool * curr_frame_pool = current_page_table->check_validity_of_page(faulty_l_addr);
     if(!curr_frame_pool) {
-        error_msg("Page fault not valid");
+        error_msg("Page fault not valid\n");
         return;
     }
     unsigned long *page_table = current_page_table->get_pd_entry(faulty_l_addr); // Now it acts just as a checker, if the page table entry doesn't exist, just creates it
@@ -203,6 +203,7 @@ void PageTable::register_pool(VMPool * _vm_pool)
 void PageTable::free_page(unsigned long _page_no)
 {
     unsigned long free_addr = _page_no << FRAME_OFFSET;
+    unsigned long *page_table = current_page_table->get_pd_entry(free_addr);
     set_page_entry(
             get_pt_addr(free_addr),
             free_addr,

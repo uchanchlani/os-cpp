@@ -13,6 +13,9 @@ vgaromimage: file=VGABIOS-lgpl-latest
 floppya: 1_44=dev_kernel_grub.img, status=inserted
 #floppyb: 1_44=floppyb.img, status=inserted
 
+# GDB
+#gdbstub: enabled=1, port=9000, text_base=0, data_base=0, bss_base=0
+
 # hard disk
 #ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 #ata0-master: type=disk, path="c.img", cylinders=306, heads=4, spt=17

@@ -47,7 +47,7 @@
 
 // just a wrapper function so that I don't write these two lines again and again
 // I hate code duplications you know
-void error_msg(const char * msg = "Error, unexpected behaviour identified\n")
+void _error_msg(const char * msg = "Error, unexpected behaviour identified\n")
 {
     Console::puts(msg);
     assert(false);
@@ -113,7 +113,7 @@ void VMPool::assign_pages(unsigned long _start_page, unsigned long _num_pages)
             return;
         }
     }
-    error_msg("No space left in the vm pool manager table. Will panic as of now\n");
+    _error_msg("No space left in the vm pool manager table. Will panic as of now\n");
 }
 
 void VMPool::init_pool(unsigned long *bitmap, unsigned int size)
@@ -139,7 +139,7 @@ VMPool::VMPool(unsigned long  _base_address,
     assigned_frames = (unsigned long *)(start_page << PageTable::FRAME_OFFSET);
     init_pool(assigned_frames, PageTable::PAGE_SIZE / sizeof(unsigned long) / 2);
     assigned_frames[0] = start_page;
-    assigned_frames[1] = 1;
+    assigned_frames[1] = start_page + 1;
     total_assgns++;
      
     Console::puts("Constructed VMPool object.\n");
@@ -159,7 +159,7 @@ unsigned long VMPool::allocate(unsigned long _size) {
         Console::puts("): Your hash function returned same value\n");
     }
     if(start == 0) {
-        error_msg("Hashing function is not so good dude\n");
+        _error_msg("Hashing function is not so good dude\n");
         return 0;
     }
     assign_pages(start, _size);
@@ -169,8 +169,8 @@ unsigned long VMPool::allocate(unsigned long _size) {
 void VMPool::release(unsigned long _start_address) {
     unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
     for(unsigned int i = 0; i < size; ++i) {
-        if(assigned_frames[i] == _start_address >> PageTable::FRAME_OFFSET) {
-            for(unsigned long page = assigned_frames[i]; page < assigned_frames[i+1]; ++page) {
+        if(assigned_frames[2*i] == _start_address >> PageTable::FRAME_OFFSET) {
+            for(unsigned long page = assigned_frames[2*i]; page < assigned_frames[2*i+1]; ++page) {
                 page_table->free_page(page);
             }
             assigned_frames[2*i] = FREE_SPACE;
@@ -178,10 +178,11 @@ void VMPool::release(unsigned long _start_address) {
             return;
         }
     }
-    error_msg("Panic as the release request is not legitimate. The code block should never reach here\n");
+    _error_msg("Panic as the release request is not legitimate. The code block should never reach here\n");
 }
 
 bool VMPool::is_legitimate(unsigned long _address) {
+    if((_address >> PageTable::FRAME_OFFSET) == start_page) return true; // special case of first page of vm
     return !check_feasible_assgn(_address >> PageTable::FRAME_OFFSET, 1);
 }
 
