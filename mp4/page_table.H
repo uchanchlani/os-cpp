@@ -125,6 +125,9 @@ private:
     * This function internally calls the add_frame_to_entry function for the core functionality of adding the pages
     */
     void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes);
+    void unset_page_entry(unsigned long * page_table, unsigned long l_addr, const PageAttributes &attributes);
+
+    unsigned long get_page_entry(unsigned long * page_table, unsigned long l_addr);
 
     // init page table entries with the given page attributes (generally will be blank page entries)
     void init_page_table_entries(unsigned long * page_table, const PageAttributes &attributes);
@@ -133,10 +136,10 @@ private:
     * get the page directory entry for the given logical address
     * the way it works is it gets the upper 10 bits from the address and considers it as the entry number
     * then access the page directory entry. If the directory entry is invalid, it will fetch a new page from the
-    * kernel pool and assign it as a page table page for the given entry, initialize the entry with all invalids, supervisor mode read write pages
+    * desired pool and assign it as a page table page for the given entry, initialize the entry with all invalids, supervisor mode read write pages
     * and return the address of the page table page
     */
-    unsigned long * get_pd_entry(unsigned long l_addr);
+    unsigned long * get_pd_entry(unsigned long l_addr, bool assign = true);
 
     /*
     * A utility function to direct map logical address space to the actual physical memory.

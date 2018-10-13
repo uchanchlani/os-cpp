@@ -66,12 +66,28 @@ void PageTable::add_frame_to_entry(unsigned long *page_table, unsigned long entr
 void PageTable::set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes)
 {
     unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
-    if(true || !is_valid_entry(page_table[entry_number])) {
+    if(!is_valid_entry(page_table[entry_number])) {
         add_frame_to_entry(page_table, entry_number, p_addr, attributes);
     } else { // I can release the frame back to the frame pool as well
              // , but where did the frame came from is the question to ask. I guess I'll get the answer in mp4
              // I'll choose to panic as of now till it is not clear
         error_msg();
+    }
+}
+
+void PageTable::unset_page_entry(unsigned long * page_table, unsigned long l_addr, const PageAttributes &attributes)
+{
+    unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
+    add_frame_to_entry(page_table, entry_number, 0x00, attributes);
+}
+
+unsigned long PageTable::get_page_entry(unsigned long * page_table, unsigned long l_addr) {
+    unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
+    if(is_valid_entry(page_table[entry_number])) {
+        return (page_table[entry_number] &
+                                  FRAME_MASK);
+    } else {
+        return 0x00;
     }
 }
 
@@ -83,17 +99,22 @@ void PageTable::init_page_table_entries(unsigned long * page_table, const PageAt
     }
 }
 
-unsigned long * PageTable::get_pd_entry(unsigned long l_addr)
+unsigned long * PageTable::get_pd_entry(unsigned long l_addr, bool assign)
 {
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
     unsigned long * logical_page_directory = get_pd_addr();
-    if(!is_valid_entry(logical_page_directory[entry_number])) {                                                     // if not valid entry, we get a page from process pool and assign it to page table page
+    if(!is_valid_entry(logical_page_directory[entry_number]) && assign) {                                                     // if not valid entry, we get a page from process pool and assign it to page table page
         unsigned long page_addr = get_new_frame(false);
         add_frame_to_entry(logical_page_directory, entry_number, page_addr, PageAttributes::DEFAULT_SUPERVISOR_PAGE);// add the page table page entry in the page directory
         init_page_table_entries(get_pt_addr(l_addr),
                 PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to SUPERVISOR READ/WRITE and INVALID
     }
-    return (unsigned long *) (logical_page_directory[entry_number] & FRAME_MASK);                                   // after optionally assigning the page table page and setting it to the page directory, we return it by adding frame mask
+    if(is_valid_entry(logical_page_directory[entry_number])) {                  // An extra check to see if things are really working as expected
+        return (unsigned long *) (logical_page_directory[entry_number] &
+                                  FRAME_MASK);                                   // after optionally assigning the page table page and setting it to the page directory, we return it by adding frame mask
+    } else {
+        return NULL;
+    }
 }
 
 void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end) // both should be aligned with frame size
@@ -203,12 +224,16 @@ void PageTable::register_pool(VMPool * _vm_pool)
 void PageTable::free_page(unsigned long _page_no)
 {
     unsigned long free_addr = _page_no << FRAME_OFFSET;
-    unsigned long *page_table = current_page_table->get_pd_entry(free_addr);
-    set_page_entry(
-            get_pt_addr(free_addr),
-            free_addr,
-            0x00,
-            PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
-    flush_tlb();
-//    Console::puts("freed page\n");
+    unsigned long *page_table = current_page_table->get_pd_entry(free_addr, false);
+    if(page_table != NULL) {
+        unsigned long framePtr = get_page_entry(page_table, free_addr);
+        if(framePtr != 0x00) {
+            unset_page_entry(
+                    get_pt_addr(free_addr),
+                    free_addr,
+                    PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
+            flush_tlb();
+            Console::puts("freed page\n");
+        }
+    }
 }
