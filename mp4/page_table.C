@@ -210,5 +210,5 @@ void PageTable::free_page(unsigned long _page_no)
             0x00,
             PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
     flush_tlb();
-    Console::puts("freed page\n");
+//    Console::puts("freed page\n");
 }

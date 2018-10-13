@@ -13,7 +13,7 @@
 #ifndef _page_table_H_                   // include file only once
 #define _page_table_H_
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 /*--------------------------------------------------------------------------*/
 /* DEFINES */
