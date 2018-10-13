@@ -54,14 +54,32 @@ private:
 
     unsigned long total_assgns;
 
+    // helper value for the hash function
     unsigned long _hash_seed;
 
+    // generates a random hash value from 0 to _size (exclusive)
     unsigned long calculate_hash(unsigned long _size);
+
+    /*
+     * Check if all the candidate pages that we have selected in the hash step can be allocated.
+     * This checks with all the previous allotements and looks for any overlap with the current candidate
+     */
     bool check_feasible_assgn(unsigned long _start_page, unsigned long _num_pages);
+
+    /*
+     * Assign pages will simply add the page to our allotment table (how lazy this vm pool is)
+     */
     void assign_pages(unsigned long _start_page, unsigned long _num_pages);
+
+    /*
+     * initialize the array of allotments with all free
+     */
     void init_pool(unsigned long* bitmap, unsigned int size);
 
 public:
+    /*
+     * Gives you this vm pools preferred frame pool from where we get the frames in case of page faults
+     */
     ContFramePool * get_frame_pool() {
         return frame_pool;
     }

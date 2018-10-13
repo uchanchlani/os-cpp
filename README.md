@@ -15,4 +15,7 @@ Also If you want to remove gdb, because it stops a lot at every page fault, plea
 Checkpoint till this time frame is abailable at checkpoint/mp3 branch
 
 ## MP4
-Initial source files are available in the master branch. Changes required for the mp4 project are being developled in mp4 branch.
+Initial source files are available in the master branch. Changes required for the mp4 project are now being merged in the master branch.
+I've commented the "#define _TEST_PAGE_TABLE_" line in kernel.C and hence adding it. 
+Also If you want to remove gdb, because it stops a lot at every page fault, please comment line 17 in [bochsrc.bxrc](mp4/bochsrc.bxrc#L17)
+Checkpoint till this time frame is abailable at checkpoint/mp4 branch

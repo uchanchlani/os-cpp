@@ -75,10 +75,10 @@ void PageTable::set_page_entry(unsigned long * page_table, unsigned long l_addr,
     }
 }
 
-void PageTable::unset_page_entry(unsigned long * page_table, unsigned long l_addr, const PageAttributes &attributes)
+void PageTable::unset_page_entry(unsigned long * page_table, unsigned long l_addr)
 {
     unsigned long entry_number = (l_addr << ENTRIES_OFFSET) >> (FRAME_OFFSET + ENTRIES_OFFSET);
-    add_frame_to_entry(page_table, entry_number, 0x00, attributes);
+    add_frame_to_entry(page_table, entry_number, 0x00, PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
 }
 
 unsigned long PageTable::get_page_entry(unsigned long * page_table, unsigned long l_addr) {
@@ -230,8 +230,7 @@ void PageTable::free_page(unsigned long _page_no)
         if(framePtr != 0x00) {
             unset_page_entry(
                     get_pt_addr(free_addr),
-                    free_addr,
-                    PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);
+                    free_addr);
             flush_tlb();
             Console::puts("freed page\n");
         }

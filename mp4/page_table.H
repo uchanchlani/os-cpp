@@ -110,7 +110,7 @@ private:
     // given a page entry check if it is valid or not
     bool is_valid_entry(unsigned long page_entry);
 
-    // get a new frame pool, either from kernel or process pool memory by default kernel pool
+    // get a new frame pool, either from kernel or process pool or any other third source of memory by default kernel pool
     static unsigned long get_new_frame(bool kernel = true);
     static unsigned long get_new_frame(ContFramePool * curr_pool);
 
@@ -125,8 +125,10 @@ private:
     * This function internally calls the add_frame_to_entry function for the core functionality of adding the pages
     */
     void set_page_entry(unsigned long * page_table, unsigned long l_addr, unsigned long p_addr, const PageAttributes &attributes);
-    void unset_page_entry(unsigned long * page_table, unsigned long l_addr, const PageAttributes &attributes);
+    // Helper to set the page entry back to invalid
+    void unset_page_entry(unsigned long * page_table, unsigned long l_addr);
 
+    // get the page table entry number from the page table.
     unsigned long get_page_entry(unsigned long * page_table, unsigned long l_addr);
 
     // init page table entries with the given page attributes (generally will be blank page entries)
@@ -148,8 +150,13 @@ private:
     */
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
 
+    /*
+     * Check if the particular virtual address is valid here. Before handling the page fault.
+     * Technically we should not get any page fault for any page which is not managed by a vm pool.
+     */
     ContFramePool * check_validity_of_page(unsigned long vaddr);
 
+    // Helper to get the virtual page directory address if needed
     unsigned long * get_pd_addr() {
         if(!paging_enabled) {
             return page_directory;
@@ -158,6 +165,7 @@ private:
                 1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
     }
 
+    // Helper to get the virtual page table address if needed
     unsigned long * get_pt_addr(unsigned long l_addr) {
         if(!paging_enabled) {
             return get_pd_entry(l_addr);
@@ -167,6 +175,7 @@ private:
                 (entry_number << FRAME_OFFSET));
     }
 
+    // util function for flushing the tlb
     static void flush_tlb() {
         write_cr3((unsigned long)current_page_table->page_directory);
     }

@@ -73,6 +73,7 @@ void _swap(T& a, T& b) {
     b = temp;
 }
 
+// For 2 ranges check if they overlap
 bool is_overlap(unsigned long start1, unsigned long end1, unsigned long start2, unsigned long end2)
 {
     if(start2 < start1) {
@@ -86,7 +87,7 @@ bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_
 {
     unsigned long assgns_left = total_assgns;
     unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
-    for(unsigned int i = 0; i < size; ++i) {
+    for(unsigned int i = 0; i < size; ++i) { // for every allotments check if it is overlapping with the current candidate allotment
         if(assgns_left <= 0) {
             return true;
         }
@@ -94,7 +95,7 @@ bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_
             continue;
         }
         unsigned long start = assigned_frames[2*1], end = assigned_frames[2*i + 1];
-        if(is_overlap(start, end, _start_page, _start_page + _num_pages)) {
+        if(is_overlap(start, end, _start_page, _start_page + _num_pages)) { // if there is an overlap we return false because this candidate is invalid now
             return false;
         }
         assgns_left--;
@@ -102,6 +103,7 @@ bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_
     return true;
 }
 
+// Simply add the entry in our assigned_frames array
 void VMPool::assign_pages(unsigned long _start_page, unsigned long _num_pages)
 {
     unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
@@ -116,6 +118,7 @@ void VMPool::assign_pages(unsigned long _start_page, unsigned long _num_pages)
     _error_msg("No space left in the vm pool manager table. Will panic as of now\n");
 }
 
+// Initialize with all 0s
 void VMPool::init_pool(unsigned long *bitmap, unsigned int size)
 {
     for(unsigned int i = 0; i < size; ++i) {
@@ -151,14 +154,14 @@ unsigned long VMPool::allocate(unsigned long _size) {
     unsigned long start = 0;
     for(unsigned long i = 0; i < 5; ++i) { // let's calculate the hash only for 5 times then panic. We'll figure out if my algo is shit
         start = start_page + calculate_hash(num_pages - _size);
-        if(check_feasible_assgn(start, _size))
+        if(check_feasible_assgn(start, _size)) // If feasible, we proceed to allocate the candidate in our allocation table
             break;
         start = 0;
         Console::puts("WARN -> Iter (");
         Console::puti((unsigned int)i);
         Console::puts("): Your hash function returned same value\n");
     }
-    if(start == 0) {
+    if(start == 0) { // if the hashing function fails for 5 times continuously, I panic for now and maybe change the algorithm.
         _error_msg("Hashing function is not so good dude\n");
         return 0;
     }
@@ -166,6 +169,7 @@ unsigned long VMPool::allocate(unsigned long _size) {
     return start << PageTable::FRAME_OFFSET;
 }
 
+// For every page in the allotment, release all the pages using the page table
 void VMPool::release(unsigned long _start_address) {
     unsigned int size = PageTable::PAGE_SIZE / sizeof(unsigned long) / 2;
     for(unsigned int i = 0; i < size; ++i) {
