@@ -226,7 +226,7 @@ void PageTable::free_page(unsigned long _page_no)
     unsigned long free_addr = _page_no << FRAME_OFFSET;
     unsigned long *page_table = current_page_table->get_pd_entry(free_addr, false);
     if(page_table != NULL) {
-        unsigned long framePtr = get_page_entry(page_table, free_addr);
+        unsigned long framePtr = get_page_entry(get_pt_addr(free_addr), free_addr);
         if(framePtr != 0x00) {
             unset_page_entry(
                     get_pt_addr(free_addr),
