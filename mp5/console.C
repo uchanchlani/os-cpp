@@ -154,7 +154,7 @@ void Console::putch(const char _c){
     {
         csr_x = 0;
         csr_y++;
-        Machine::outportb(0xe9, '\r');
+        Machine::outportb(0xe9, '\n');
     }
     /* Any character greater than and including a space, is a
     *  printable character. The equation for finding the index
@@ -165,7 +165,7 @@ void Console::putch(const char _c){
         unsigned short * where = textmemptr + (csr_y * 80 + csr_x);
         *where = _c | (attrib << 8);	/* Character AND attributes: color */
         csr_x++;
-        Machine::outportb(0xe9, '\r');
+        Machine::outportb(0xe9, _c);
     }
 
     /* If the cursor has reached the edge of the screen's width, we
