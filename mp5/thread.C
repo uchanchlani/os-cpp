@@ -36,12 +36,13 @@
 #include "thread.H"
 
 #include "threads_low.H"
+#include "scheduler.H"
 
 /*--------------------------------------------------------------------------*/
 /* EXTERNS */
 /*--------------------------------------------------------------------------*/
 
-typedef unsigned long size_t;
+typedef unsigned int size_t;
 extern void * operator new (size_t size);
 extern void * operator new[] (size_t size);
 extern void operator delete (void * p);
