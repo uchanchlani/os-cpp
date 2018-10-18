@@ -2,6 +2,8 @@
 // Created by utkarsh on 10/18/18.
 //
 
+#include "console.H"
+
 #include "fifo_scheduler.H"
 #include "utils.H"
 
@@ -64,10 +66,17 @@ void FIFOScheduler::add(Thread *_thread) {
 
 void FIFOScheduler::terminate(Thread *_thread) {
     if(Thread::CurrentThread()->equals(_thread)) {
+        Console::puts("Marked Thread: ");
+        Console::puti(_thread->ThreadId());
+        Console::puts(" for deletion");
         _thread->mark_for_termination();
         add(_thread);
     } else {
+        int thread_id = _thread->ThreadId();
         _thread->clean_up();
         delete (_thread);
+        Console::puts("Thread: ");
+        Console::puti(thread_id);
+        Console::puts(" finally deleted");
     }
 }
