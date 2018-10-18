@@ -46,7 +46,7 @@
 /*--------------------------------------------------------------------------*/
 
 Scheduler::Scheduler() {
-  assert(false);
+//  assert(false);
   Console::puts("Constructed Scheduler.\n");
 }
 
