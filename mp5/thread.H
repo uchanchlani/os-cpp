@@ -64,7 +64,9 @@ private:
        The thread is supposed the call the function _tfunction upon start.
     */
  
-public: 
+public:
+    Thread * next;
+
     Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size);
     /* Create a thread that is set up to execute the given thread function. 
        The thread is given a pointer to the stack to use. 
@@ -85,6 +87,10 @@ public:
     static Thread * CurrentThread();
     /* Returns the currently running thread. NULL if no thread has started 
        yet. */
+
+    bool equals(Thread * _thread) {
+        return this->thread_id == _thread->thread_id;
+    }
 };
 
 #endif

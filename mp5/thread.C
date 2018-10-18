@@ -163,7 +163,7 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
 /* Construct a new thread and initialize its stack. The thread is then ready to run.
    (The dispatcher is implemented in file "thread_scheduler".) 
 */
-
+    next = NULL;
     /* -- INITIALIZE THREAD */
 
     /* ---- THREAD ID */
