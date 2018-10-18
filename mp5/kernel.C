@@ -57,10 +57,10 @@
 #include "mem_pool.H"
 
 #include "thread.H"          /* THREAD MANAGEMENT */
-#include "fifo_scheduler.H"
 
 #ifdef _USES_SCHEDULER_
 #include "scheduler.H"
+#include "fifo_scheduler.H"
 #endif
 
 /*--------------------------------------------------------------------------*/

@@ -6,6 +6,7 @@
 #include "utils.H"
 
 Thread * FIFOScheduler::_head_thread = NULL;
+Thread * FIFOScheduler::_tail_thread = NULL;
 
 Thread *FIFOScheduler::pop() {
     if(_head_thread == NULL) return NULL;
