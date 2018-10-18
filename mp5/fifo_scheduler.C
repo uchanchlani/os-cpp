@@ -5,7 +5,7 @@
 #include "fifo_scheduler.H"
 #include "utils.H"
 
-typedef unsigned long size_t;
+typedef unsigned int size_t;
 extern void * operator new (size_t size);
 extern void * operator new[] (size_t size);
 extern void operator delete (void * p);
