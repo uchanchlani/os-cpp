@@ -56,6 +56,8 @@ private:
 
     static int nextFreePid; /* Used to assign unique id's to threads. */
 
+    bool terminated;
+
     void push(unsigned long _val);
     /* Push the given value on the stack of the thread. */
 
@@ -88,9 +90,13 @@ public:
     /* Returns the currently running thread. NULL if no thread has started 
        yet. */
 
-    bool equals(Thread * _thread) {
-        return this->thread_id == _thread->thread_id;
-    }
+    bool equals(Thread * _thread);
+
+    void mark_for_termination();
+
+    bool is_terminated();
+
+    void clean_up();
 };
 
 #endif

@@ -73,7 +73,7 @@ FramePool * SYSTEM_FRAME_POOL;
 /* -- A POOL OF CONTIGUOUS MEMORY FOR THE SYSTEM TO USE */
 MemPool * MEMORY_POOL;
 
-typedef unsigned int size_t;
+typedef unsigned long size_t;
 
 //replace the operator "new"
 void * operator new (size_t size) {

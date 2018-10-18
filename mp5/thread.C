@@ -41,6 +41,13 @@
 /* EXTERNS */
 /*--------------------------------------------------------------------------*/
 
+typedef unsigned long size_t;
+extern void * operator new (size_t size);
+extern void * operator new[] (size_t size);
+extern void operator delete (void * p);
+extern void operator delete[] (void * p);
+extern Scheduler * SYSTEM_SCHEDULER;
+
 Thread * current_thread = 0;
 /* Pointer to the currently running thread. This is used by the scheduler,
    for example. */
@@ -68,15 +75,8 @@ inline void Thread::push(unsigned long _val) {
 /* LOCAL FUNCTIONS TO START/SHUTDOWN THREADS. */
 
 static void thread_shutdown() {
-    /* This function should be called when the thread returns from the thread function.
-       It terminates the thread by releasing memory and any other resources held by the thread. 
-       This is a bit complicated because the thread termination interacts with the scheduler.
-     */
-
-    assert(false);
-    /* Let's not worry about it for now. 
-       This means that we should have non-terminating thread functions. 
-    */
+    SYSTEM_SCHEDULER->terminate(Thread::CurrentThread());
+    SYSTEM_SCHEDULER->yield();
 }
 
 static void thread_start() {
@@ -208,4 +208,23 @@ void Thread::dispatch_to(Thread * _thread) {
 Thread * Thread::CurrentThread() {
 /* Return the currently running thread. */
     return current_thread;
+}
+
+bool Thread::equals(Thread *_thread)  {
+    return this->thread_id == _thread->thread_id;
+}
+
+void Thread::mark_for_termination() {
+    terminated = true;
+}
+
+bool Thread::is_terminated() {
+    return terminated;
+}
+
+void Thread::clean_up() {
+    if(this->stack != NULL) {
+        delete (this->stack);
+    }
+    this->stack = NULL;
 }
