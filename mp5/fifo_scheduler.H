@@ -18,13 +18,13 @@ private:
 public:
     FIFOScheduler();
 
-    void yield();
+    virtual void yield();
 
-    void resume(Thread *_thread);
+    virtual void resume(Thread *_thread);
 
-    void add(Thread *_thread);
+    virtual void add(Thread *_thread);
 
-    void terminate(Thread *_thread);
+    virtual void terminate(Thread *_thread);
 };
 
 #endif //FIFO_SCHEDULER_H

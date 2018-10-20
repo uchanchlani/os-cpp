@@ -61,6 +61,9 @@
 #ifdef _USES_SCHEDULER_
 #include "scheduler.H"
 #include "fifo_scheduler.H"
+#include "rr_timer.H"
+#include "rr_scheduler.H"
+
 #endif
 
 /*--------------------------------------------------------------------------*/
@@ -108,7 +111,8 @@ Scheduler * SYSTEM_SCHEDULER;
 
 #endif
 
-void pass_on_CPU(Thread * _to_thread) {
+void pass_on_CPU(Thread * _to_thread) {} // do nothing. we handle this by timer now
+void pass_on_CPU_old(Thread * _to_thread) {
   // Hand over CPU from current thread to _to_thread.
   
 #ifndef _USES_SCHEDULER_
@@ -249,7 +253,7 @@ int main() {
                  we enable interrupts correctly. If we forget to do it,
                  the timer "dies". */
 
-    SimpleTimer timer(100); /* timer ticks every 10ms. */
+    RRTimer timer(); /* timer ticks every 10ms. */
     InterruptHandler::register_handler(0, &timer);
     /* The Timer is implemented as an interrupt handler. */
 
@@ -257,7 +261,7 @@ int main() {
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
  
-    SYSTEM_SCHEDULER = new FIFOScheduler();
+    SYSTEM_SCHEDULER = new RRScheduler();
 
 #endif
 

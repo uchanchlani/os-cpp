@@ -83,6 +83,7 @@ class InterruptHandler {
      InterruptHandler, and their functionality is implemented in 
      this function.*/
 
+    static void end_of_interrupt(unsigned int int_no);
 };
 
 #endif

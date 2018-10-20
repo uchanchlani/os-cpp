@@ -55,6 +55,9 @@
 /*--------------------------------------------------------------------------*/
 
 class Scheduler {
+private:
+    bool handles_timer_interrupt;
+    bool interrupt_occured;
 
   /* The scheduler may need private members... */
   
@@ -88,7 +91,24 @@ public:
    /* Remove the given thread from the scheduler in preparation for destruction
       of the thread. 
       Graciously handle the case where the thread wants to terminate itself.*/
-  
+
+   bool is_handle_timer_interrupt() {
+      return handles_timer_interrupt;
+   }
+
+   void request_handle_interrupt() {
+      interrupt_occured = true;
+   }
+
+protected:
+   // only the rr scheduler can ask such question or clear the handled interrupt in this case
+   bool is_interrupt_occured() {
+      return interrupt_occured;
+   }
+
+   void handled_interrupt() {
+      interrupt_occured = false;
+   }
 };
 	
 	
