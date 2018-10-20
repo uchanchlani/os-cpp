@@ -31,8 +31,13 @@ FIFOScheduler::FIFOScheduler() : Scheduler() {
 }
 
 void FIFOScheduler::yield() {
-    if (Thread::CurrentThread() == NULL) return;
     Machine::disable_interrupts();
+    context_switch();
+    Machine::enable_interrupts();
+}
+
+void FIFOScheduler::context_switch() {
+    if (Thread::CurrentThread() == NULL) return;
     Thread *thread = pop();
     while(thread != NULL && thread->is_terminated()) {
         terminate(thread);
@@ -51,7 +56,6 @@ void FIFOScheduler::yield() {
         Thread::CurrentThread()
                 ->dispatch_to(thread);
     }
-    Machine::enable_interrupts();
 }
 
 void FIFOScheduler::resume(Thread *_thread) {

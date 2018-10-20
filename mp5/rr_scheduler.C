@@ -10,7 +10,7 @@ RRScheduler::RRScheduler() : FIFOScheduler() {
 }
 
 void RRScheduler::yield() {
-    FIFOScheduler::yield();
+    context_switch();
     if(is_interrupt_occured()) {
         InterruptHandler::end_of_interrupt(0);
         handled_interrupt();

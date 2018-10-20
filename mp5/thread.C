@@ -184,6 +184,7 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
 
     setup_context(_tf);
 
+    terminated = false;
 }
 
 int Thread::ThreadId() {

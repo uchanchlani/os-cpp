@@ -25,6 +25,9 @@ public:
     virtual void add(Thread *_thread);
 
     virtual void terminate(Thread *_thread);
+
+protected:
+    void context_switch();
 };
 
 #endif //FIFO_SCHEDULER_H
