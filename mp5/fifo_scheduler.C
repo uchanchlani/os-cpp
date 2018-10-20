@@ -59,9 +59,10 @@ void FIFOScheduler::add(Thread *_thread) {
     if (_head_thread == NULL) {
         _head_thread = _thread;
         _tail_thread = _head_thread;
+    } else {
+        _tail_thread->next = _thread;
+        _tail_thread = _tail_thread->next;
     }
-    _tail_thread->next = _thread;
-    _tail_thread = _tail_thread->next;
 }
 
 void FIFOScheduler::terminate(Thread *_thread) {
