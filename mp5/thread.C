@@ -82,7 +82,8 @@ static void thread_shutdown() {
 
 static void thread_start() {
      /* This function is used to release the thread for execution in the ready queue. */
-    
+
+     Machine::enable_interrupts();
      /* We need to add code, but it is probably nothing more than enabling interrupts. */
 }
 
