@@ -31,9 +31,7 @@ FIFOScheduler::FIFOScheduler() : Scheduler() {
 }
 
 void FIFOScheduler::yield() {
-    Machine::disable_interrupts();
     context_switch();
-    Machine::enable_interrupts();
 }
 
 void FIFOScheduler::context_switch() {
