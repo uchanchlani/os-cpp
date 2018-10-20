@@ -6,7 +6,7 @@
 #include "rr_scheduler.H"
 
 RRScheduler::RRScheduler() : FIFOScheduler() {
-    handles_timer_interrupt = true;
+    set_handle_timer_interrupt();
 }
 
 void RRScheduler::yield() {

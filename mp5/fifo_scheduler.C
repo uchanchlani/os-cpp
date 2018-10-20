@@ -31,6 +31,7 @@ FIFOScheduler::FIFOScheduler() : Scheduler() {
 }
 
 void FIFOScheduler::yield() {
+    if (Thread::CurrentThread() == NULL) return;
     Machine::disable_interrupts();
     Thread *thread = pop();
     while(thread != NULL && thread->is_terminated()) {

@@ -10,7 +10,7 @@
 
 class RRTimer : public SimpleTimer {
 public:
-    RRTimer() : SimpleTimer(20) {} // fixed quantum of 50msec as of now
+    RRTimer(int _hz) : SimpleTimer(_hz) {} // fixed quantum of 50msec as of now
 
     void handle_interrupt(REGS *_r);
 };

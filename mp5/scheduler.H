@@ -109,6 +109,10 @@ protected:
    void handled_interrupt() {
       interrupt_occured = false;
    }
+
+   void set_handle_timer_interrupt() {
+      handles_timer_interrupt = true;
+   }
 };
 	
 	
