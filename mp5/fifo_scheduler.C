@@ -68,7 +68,7 @@ void FIFOScheduler::terminate(Thread *_thread) {
     if(Thread::CurrentThread()->equals(_thread)) {
         Console::puts("Marked Thread: ");
         Console::puti(_thread->ThreadId());
-        Console::puts(" for deletion");
+        Console::puts(" for deletion\n");
         _thread->mark_for_termination();
         add(_thread);
     } else {
@@ -77,6 +77,6 @@ void FIFOScheduler::terminate(Thread *_thread) {
         delete (_thread);
         Console::puts("Thread: ");
         Console::puti(thread_id);
-        Console::puts(" finally deleted");
+        Console::puts(" finally deleted\n");
     }
 }
