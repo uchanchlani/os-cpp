@@ -83,6 +83,7 @@ static void thread_shutdown() {
 static void thread_start() {
      /* This function is used to release the thread for execution in the ready queue. */
 
+     SYSTEM_SCHEDULER->mark_current_thread_started();
      Machine::enable_interrupts();
      /* We need to add code, but it is probably nothing more than enabling interrupts. */
 }
@@ -184,6 +185,9 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
 
     setup_context(_tf);
 
+    /* -- INITIALIZE THE STATES OF THE THREAD */
+    started = false;
+
     terminated = false;
 }
 
@@ -230,4 +234,12 @@ void Thread::clean_up() {
         delete (this->stack);
     }
     this->stack = NULL;
+}
+
+void Thread::mark_started() {
+    started = true;
+}
+
+bool Thread::is_started() {
+    return started;
 }

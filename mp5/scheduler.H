@@ -92,6 +92,8 @@ public:
       of the thread. 
       Graciously handle the case where the thread wants to terminate itself.*/
 
+   virtual void mark_current_thread_started();
+
    bool is_handle_timer_interrupt() {
       return handles_timer_interrupt;
    }

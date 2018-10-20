@@ -66,3 +66,7 @@ void Scheduler::add(Thread * _thread) {
 void Scheduler::terminate(Thread * _thread) {
   assert(false);
 }
+
+void Scheduler::mark_current_thread_started() {
+  Thread::CurrentThread()->mark_started();
+}

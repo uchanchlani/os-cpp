@@ -9,11 +9,15 @@
 #include "fifo_scheduler.H"
 
 class RRScheduler : public FIFOScheduler {
+private:
+    void end_of_interrupt();
 
 public:
     RRScheduler();
 
     virtual void yield();
+
+    virtual void mark_current_thread_started();
 };
 
 
