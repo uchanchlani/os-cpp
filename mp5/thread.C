@@ -76,6 +76,7 @@ inline void Thread::push(unsigned long _val) {
 /* LOCAL FUNCTIONS TO START/SHUTDOWN THREADS. */
 
 static void thread_shutdown() {
+    Machine::disable_interrupts();
     SYSTEM_SCHEDULER->terminate(Thread::CurrentThread());
     SYSTEM_SCHEDULER->yield();
 }

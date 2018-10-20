@@ -31,6 +31,9 @@ FIFOScheduler::FIFOScheduler() : Scheduler() {
 }
 
 void FIFOScheduler::yield() {
+    if(!Machine::interrupts_enabled()) {
+        Machine::enable_interrupts(); // trick if we need to run fifo even after the introduction of rr scheduler
+}
     context_switch();
 }
 
