@@ -93,6 +93,7 @@ private:
     
     /* DATA FOR CURRENT PAGE TABLE */
     unsigned long        * page_directory;     /* where is page directory located? */
+    VMPool * heap_pool;                        /* Where is the heap memory of the current process */
     static VMPool ** all_vm_pools;              /* list of all vm pools pointers, simplified version as compared to linked lists */
     static unsigned long vm_pools_count;       /* this will start with 0, just saves us the hastle of traversing the list sometimes */
     
@@ -219,12 +220,23 @@ public:
     
     // -- NEW IN MP4
     
-    void register_pool(VMPool * _vm_pool);
+    void register_pool(VMPool * _vm_pool, bool is_heap = true);
     /* Register a virtual memory pool with the page table. */
     
     void free_page(unsigned long _page_no);
     /* If page is valid, release frame and mark page invalid. */
-    
+
+    VMPool * get_heap() {
+        return this->heap_pool;
+    }
+
+    static PageTable * get_current_page_table() {
+        return current_page_table;
+    }
+
+    static VMPool * get_current_page_table_heap() {
+        return get_current_page_table()->get_heap();
+    }
 };
 
 #endif

@@ -211,13 +211,16 @@ void PageTable::handle_fault(REGS * _r)
 #endif
 }
 
-void PageTable::register_pool(VMPool * _vm_pool)
+void PageTable::register_pool(VMPool * _vm_pool, bool is_heap)
 {
     if(vm_pools_count == 0) {
         all_vm_pools = (VMPool ** ) get_new_frame(true); // get a kernel frame. because it is direct mapped, no worries, as Prof says, "WORKS LIKE A CHARM!"
     }
     all_vm_pools[vm_pools_count] = _vm_pool;
     vm_pools_count++;
+    if(is_heap) {
+        heap_pool = _vm_pool;
+    }
     Console::puts("registered VM pool\n");
 }
 
@@ -231,6 +234,7 @@ void PageTable::free_page(unsigned long _page_no)
             unset_page_entry(
                     get_pt_addr(free_addr),
                     free_addr);
+            ContFramePool::release_frames(framePtr >> FRAME_OFFSET);
             flush_tlb();
             Console::puts("freed page\n");
         }

@@ -130,12 +130,13 @@ void VMPool::init_pool(unsigned long *bitmap, unsigned int size)
 VMPool::VMPool(unsigned long  _base_address,
                unsigned long  _size,
                ContFramePool *_frame_pool,
-               PageTable     *_page_table) {
+               PageTable     *_page_table,
+               bool          is_heap) {
     frame_pool = _frame_pool;
     start_page = _base_address >> PageTable::FRAME_OFFSET;
     num_pages = _size >> PageTable::FRAME_OFFSET;
     page_table = _page_table;
-    page_table->register_pool(this);
+    page_table->register_pool(this, is_heap);
     total_assgns = 0;
 
     _hash_seed = 2147483647; // some prime number

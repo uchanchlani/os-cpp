@@ -87,7 +87,8 @@ public:
    VMPool(unsigned long  _base_address,
           unsigned long  _size,
           ContFramePool *_frame_pool,
-          PageTable     *_page_table);
+          PageTable     *_page_table,
+          bool          is_heap = true);
    /* Initializes the data structures needed for the management of this
     * virtual-memory pool.
     * _base_address is the logical start address of the pool.
