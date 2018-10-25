@@ -75,7 +75,10 @@ void FIFOScheduler::terminate(Thread *_thread) {
     } else {
         int thread_id = _thread->ThreadId();
         _thread->clean_up();
-        delete (_thread);
+        // We don't free up the thread pointer.
+        // The invoker of the thread may be waiting for the thread to join back and blocked on it
+        // Let that thread take over and free it in whatever way it finds suitable
+//        delete (_thread);
         Console::puts("Thread: ");
         Console::puti(thread_id);
         Console::puts(" finally deleted\n");
