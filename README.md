@@ -21,5 +21,4 @@ Also If you want to remove gdb, because it stops a lot at every page fault, plea
 Checkpoint till this time frame is available at checkpoint/mp4 branch
 
 ## MP5
-Initial source files for the assignment are available in the master branch. Changes required for the mp5 project are being done in the mp5 branch.
-Random writing so that the mp5 branch goes ahead of the master branch.
+Initial source files for the assignment are available in the master branch. Changes till bonus 2 are present in master branch now. We work on mp5 bonus 3 and further coming assignments in parallel in different branches
