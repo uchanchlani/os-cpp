@@ -22,3 +22,6 @@ Checkpoint till this time frame is available at checkpoint/mp4 branch
 
 ## MP5
 Initial source files for the assignment are available in the master branch. Changes till bonus 2 are present in master branch now. We work on mp5 bonus 3 and further coming assignments in parallel in different branches
+
+## MP6
+Intial source files for the assignment added in the master branch. Branching out to mp6 branch now
