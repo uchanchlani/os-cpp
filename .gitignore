@@ -1,4 +1,6 @@
 dev_kernel_grub.img
+*.img
+# Doesn't makes sense to commit the disk images
 kernel.bin
 bochsout.txt
 
