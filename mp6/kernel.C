@@ -300,6 +300,15 @@ int main() {
     InterruptHandler::register_handler(0, &timer);
     /* The Timer is implemented as an interrupt handler. */
 
+    class IOInterrupt : public InterruptHandler {
+    public:
+        virtual void handle_interrupt(REGS *_regs) {
+            Console::puts("Ignore this interrupt 14\n");
+        }
+    } ioInterrupt;
+
+    InterruptHandler::register_handler(14, &ioInterrupt);
+
 #ifdef _USES_SCHEDULER_
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
