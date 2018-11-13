@@ -69,6 +69,9 @@ void BlockingDisk::enter_critical_section() {
 }
 
 void BlockingDisk::exit_critical_section() {
+    Console::puts("Thread ");
+    Console::puti(Thread::CurrentThread()->ThreadId());
+    Console::puts(" Now done with io\n");
     Thread * actionable = _blocked_queue.pop();
     if(actionable != NULL) {
         SYSTEM_SCHEDULER->resume(actionable);
