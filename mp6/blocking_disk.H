@@ -22,6 +22,8 @@
 /*--------------------------------------------------------------------------*/
 
 #include "simple_disk.H"
+#include "thread.H"
+#include "fifo_queue.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
@@ -29,11 +31,26 @@
 
 /* -- (none) -- */
 
+enum DiskStatus {
+    READY,
+    WAITING_ON_OPERATION
+};
+
 /*--------------------------------------------------------------------------*/
 /* B l o c k i n g D i s k  */
 /*--------------------------------------------------------------------------*/
 
 class BlockingDisk : public SimpleDisk {
+private:
+    FIFOQueue _blocked_queue;
+    DiskStatus _disk_status;
+
+    void enter_critical_section();
+    void exit_critical_section();
+
+protected:
+    void wait_until_ready();
+
 public:
    BlockingDisk(DISK_ID _disk_id, unsigned int _size); 
    /* Creates a BlockingDisk device with the given size connected to the 

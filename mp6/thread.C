@@ -29,7 +29,6 @@
 /*--------------------------------------------------------------------------*/
 
 #include "assert.H"
-#include "utils.H"
 #include "console.H"
 
 #include "frame_pool.H"
@@ -37,10 +36,18 @@
 #include "thread.H"
 
 #include "threads_low.H"
+#include "scheduler.H"
 
 /*--------------------------------------------------------------------------*/
 /* EXTERNS */
 /*--------------------------------------------------------------------------*/
+
+typedef unsigned int size_t;
+extern void * operator new (size_t size);
+extern void * operator new[] (size_t size);
+extern void operator delete (void * p);
+extern void operator delete[] (void * p);
+extern Scheduler * SYSTEM_SCHEDULER;
 
 Thread * current_thread = 0;
 /* Pointer to the currently running thread. This is used by the scheduler,
@@ -69,20 +76,15 @@ inline void Thread::push(unsigned long _val) {
 /* LOCAL FUNCTIONS TO START/SHUTDOWN THREADS. */
 
 static void thread_shutdown() {
-    /* This function should be called when the thread returns from the thread function.
-       It terminates the thread by releasing memory and any other resources held by the thread. 
-       This is a bit complicated because the thread termination interacts with the scheduler.
-     */
-
-    assert(false);
-    /* Let's not worry about it for now. 
-       This means that we should have non-terminating thread functions. 
-    */
+    SYSTEM_SCHEDULER->terminate(Thread::CurrentThread());
+    SYSTEM_SCHEDULER->yield();
 }
 
 static void thread_start() {
      /* This function is used to release the thread for execution in the ready queue. */
-    
+
+     SYSTEM_SCHEDULER->mark_current_thread_started();
+     Machine::enable_interrupts();
      /* We need to add code, but it is probably nothing more than enabling interrupts. */
 }
 
@@ -164,7 +166,7 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
 /* Construct a new thread and initialize its stack. The thread is then ready to run.
    (The dispatcher is implemented in file "thread_scheduler".) 
 */
-
+    next = NULL;
     /* -- INITIALIZE THREAD */
 
     /* ---- THREAD ID */
@@ -183,6 +185,10 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
 
     setup_context(_tf);
 
+    /* -- INITIALIZE THE STATES OF THE THREAD */
+    started = false;
+
+    terminated = false;
 }
 
 int Thread::ThreadId() {
@@ -209,4 +215,31 @@ void Thread::dispatch_to(Thread * _thread) {
 Thread * Thread::CurrentThread() {
 /* Return the currently running thread. */
     return current_thread;
+}
+
+bool Thread::equals(Thread *_thread)  {
+    return this->thread_id == _thread->thread_id;
+}
+
+void Thread::mark_for_termination() {
+    terminated = true;
+}
+
+bool Thread::is_terminated() {
+    return terminated;
+}
+
+void Thread::clean_up() {
+    if(this->stack != NULL) {
+        delete (this->stack);
+    }
+    this->stack = NULL;
+}
+
+void Thread::mark_started() {
+    started = true;
+}
+
+bool Thread::is_started() {
+    return started;
 }

@@ -19,7 +19,7 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-//#define _USES_SCHEDULER_
+#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use 
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each 
@@ -50,6 +50,7 @@
 
 #ifdef _USES_SCHEDULER_
 #include "scheduler.H"      /* WE WILL NEED A SCHEDULER WITH BlockingDisk */
+#include "fifo_scheduler.H"
 #endif
 
 #include "simple_disk.H"    /* DISK DEVICE */
@@ -280,7 +281,7 @@ int main() {
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
   
-    SYSTEM_SCHEDULER = new Scheduler();
+    SYSTEM_SCHEDULER = new FIFOScheduler();
 
 #endif
 
