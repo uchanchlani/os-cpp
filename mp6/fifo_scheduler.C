@@ -5,6 +5,7 @@
 #include "console.H"
 
 #include "fifo_scheduler.H"
+#include "fifo_queue.H"
 #include "utils.H"
 
 typedef unsigned int size_t;

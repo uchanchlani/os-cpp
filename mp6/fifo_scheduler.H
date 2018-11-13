@@ -11,7 +11,7 @@
 
 class FIFOScheduler : public Scheduler {
 private:
-    static FIFOQueue _ready_queue;
+    FIFOQueue _ready_queue;
 
 public:
     FIFOScheduler();

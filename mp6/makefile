@@ -85,7 +85,7 @@ fifo_scheduler.o: fifo_scheduler.C fifo_scheduler.H thread.H
 
 # ==== KERNEL MAIN FILE =====
 
-kernel.o: kernel.C machine.H console.H gdt.H idt.H irq.H exceptions.H interrupts.H simple_timer.H frame_pool.H mem_pool.H thread.H simple_disk.H
+kernel.o: kernel.C machine.H console.H gdt.H idt.H irq.H exceptions.H interrupts.H simple_timer.H frame_pool.H mem_pool.H thread.H simple_disk.H fifo_queue.H scheduler.H fifo_scheduler.H 
 	$(CPP) $(CPP_OPTIONS) -c -o kernel.o kernel.C
 
 kernel.bin: start.o utils.o kernel.o \
@@ -93,10 +93,10 @@ kernel.bin: start.o utils.o kernel.o \
    interrupts.o simple_timer.o simple_keyboard.o frame_pool.o mem_pool.o \
    thread.o threads_low.o simple_disk.o blocking_disk.o \
     machine.o machine_low.o \
-    scheduler.o fifo_scheduler.o fifo_queue.o
+    scheduler.o fifo_queue.o fifo_scheduler.o
 	ld -melf_i386 -T linker.ld -o kernel.bin start.o utils.o kernel.o \
    assert.o console.o gdt.o idt.o irq.o exceptions.o interrupts.o \
    simple_timer.o simple_keyboard.o frame_pool.o mem_pool.o \
    thread.o threads_low.o simple_disk.o blocking_disk.o \
     machine.o machine_low.o \
-    scheduler.o fifo_scheduler.o fifo_queue.o
+    scheduler.o fifo_queue.o fifo_scheduler.o
