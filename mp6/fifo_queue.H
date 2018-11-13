@@ -5,7 +5,7 @@
 #ifndef FIFO_QUEUE_H
 #define FIFO_QUEUE_H
 
-#include <thread.H>
+#include "thread.H"
 
 class FIFOQueue {
 private:
