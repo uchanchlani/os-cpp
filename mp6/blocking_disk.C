@@ -81,7 +81,9 @@ void BlockingDisk::exit_critical_section() {
 }
 
 void BlockingDisk::wait_until_ready() {
-    while(!is_ready()) {
+    int i = 0;
+    while(!is_ready() || i < 2) {
+        i++;
         SYSTEM_SCHEDULER->resume(Thread::CurrentThread());
         SYSTEM_SCHEDULER->yield();
     }

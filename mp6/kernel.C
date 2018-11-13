@@ -54,7 +54,8 @@
 #endif
 
 #include "simple_disk.H"    /* DISK DEVICE */
-                            /* YOU MAY NEED TO INCLUDE blocking_disk.H
+                            /* YOU MAY NEED TO INCLUDE blocking_disk.H */
+#include "blocking_disk.H"
 /*--------------------------------------------------------------------------*/
 /* MEMORY MANAGEMENT */
 /*--------------------------------------------------------------------------*/
@@ -180,7 +181,8 @@ void fun2() {
        /* -- Display */
        int i;
        for (i = 0; i < 512; i++) {
-	  Console::putch(buf[i]);
+	  Console::puti(buf[i]);
+          buf[i] = buf[i] + 1;
        }
 
        Console::puts("Writing a block to disk...\n");
@@ -287,7 +289,7 @@ int main() {
 
     /* -- DISK DEVICE -- */
 
-    SYSTEM_DISK = new SimpleDisk(MASTER, SYSTEM_DISK_SIZE);
+    SYSTEM_DISK = new BlockingDisk(MASTER, SYSTEM_DISK_SIZE);
    
     /* NOTE: The timer chip starts periodically firing as 
              soon as we enable interrupts.
