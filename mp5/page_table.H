@@ -152,6 +152,7 @@ private:
     * In this context we are calling it only to direct map the first 4 MB of our memory
     */
     void direct_map_memory(unsigned long l_addr_start, unsigned long l_addr_end);
+    void copy_memory(PageTable * pageTable, unsigned long size);
 
     /*
      * Check if the particular virtual address is valid here. Before handling the page fault.

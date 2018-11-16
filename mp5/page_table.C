@@ -149,6 +149,20 @@ void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_ad
     }
 }
 
+void PageTable::copy_memory(PageTable * pageTable, unsigned long size) {
+    unsigned long * curr_pd_entry;
+    unsigned long * other_pd_entry;
+    int pd_entry_size = 1 << 22;
+    for(unsigned long dir_boundary = 0; dir_boundary < size; dir_boundary += pd_entry_size) {
+        curr_pd_entry = (unsigned long *) get_new_frame(false);
+        other_pd_entry = get_pd_entry(dir_boundary, false);
+        add_frame_to_entry(get_pd_addr(), dir_boundary / pd_entry_size, (unsigned long)curr_pd_entry, PageAttributes::DEFAULT_SUPERVISOR_PAGE);// add the page table page entry in the page directory
+        for(unsigned long page_entries = 0; page_entries < 1024; ++ page_entries) {
+            curr_pd_entry[page_entries] = other_pd_entry[page_entries];
+        }
+    }
+}
+
 ContFramePool * PageTable::check_validity_of_page(unsigned long vaddr) {
     for(unsigned int i = 0; i < vm_pools_count; ++i) {
         if(all_vm_pools[i]->is_legitimate(vaddr)) {
@@ -179,19 +193,12 @@ PageTable::PageTable()
     attributes.unmark_rw();
     add_frame_to_entry(get_pd_addr(), 1023, (unsigned long)page_directory, attributes);
 
-    // before direct mapping check if paging is enabled,
-    // if it is load the current pd in the page table
-    if(paging_enabled) {
-//        Machine::disable_interrupts();
-        write_cr3((unsigned long)page_directory);
+    if(!paging_enabled) {
+        direct_map_memory(0, shared_size);                                                      // do the direct mapping of the shared space
+    } else {
+        copy_memory(current_page_table, shared_size);
     }
 
-    direct_map_memory(0, shared_size);                                                      // do the direct mapping of the shared space
-
-    if(paging_enabled) {
-        write_cr3((unsigned long)current_page_table->page_directory);
-//        Machine::enable_interrupts();
-    }
     Console::puts("Constructed Page Table object\n");                                       // we are all set. Cheers
 }
 
