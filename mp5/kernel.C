@@ -333,7 +333,7 @@ int main() {
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
 
-    SYSTEM_SCHEDULER = new(kernel_mem_pool) RRScheduler(); // Scheduler goes on the stack
+    SYSTEM_SCHEDULER = new(&kernel_mem_pool) RRScheduler(); // Scheduler goes on the stack
 
 #endif
 
@@ -353,19 +353,19 @@ int main() {
     Thread::init_threading(&kernel_mem_pool, &process_mem_pool);
 
     Console::puts("CREATING THREAD 1...\n");
-    thread1 = new(kernel_mem_pool) Thread(fun1, 1024);
+    thread1 = new(&kernel_mem_pool) Thread(fun1, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    thread2 = new(kernel_mem_pool) Thread(fun2, 1024);
+    thread2 = new(&kernel_mem_pool) Thread(fun2, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");
-    thread3 = new(kernel_mem_pool) Thread(fun3, 1024);
+    thread3 = new(&kernel_mem_pool) Thread(fun3, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 4...");
-    thread4 = new(kernel_mem_pool) Thread(fun4, 1024);
+    thread4 = new(&kernel_mem_pool) Thread(fun4, 1024);
     Console::puts("DONE\n");
 
 #ifdef _USES_SCHEDULER_
