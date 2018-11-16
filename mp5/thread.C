@@ -61,6 +61,8 @@ Thread * current_thread = 0;
 /* -------------------------------------------------------------------------*/
 
 int Thread::nextFreePid;
+ContFramePool * Thread::kernel_mem_pool = NULL;
+ContFramePool * Thread::process_mem_pool = NULL;
 
 /* -------------------------------------------------------------------------*/
 /* LOCAL FUNCTIONS */
@@ -187,7 +189,7 @@ Thread::Thread(Thread_Function _tf, unsigned int _stack_size) {
     thread_id = nextFreePid++;
 
     pageTable = new(kernel_mem_pool) PageTable();
-    heapMemory = new(kernel_mem_pool) VMPool(1 GB, 256 MB, &process_mem_pool, &pageTable, true);
+    heapMemory = new(kernel_mem_pool) VMPool(1 GB, 256 MB, process_mem_pool, pageTable, true);
 
     PageTable * prevPageTable = PageTable::get_current_page_table();
 

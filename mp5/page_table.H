@@ -245,11 +245,5 @@ public:
     }
 };
 
-extern "C" void load_curr_page_table(PageTable * pageTable) {
-    if(pageTable == NULL)
-        return;
-    pageTable->load();
-}
-
 #endif
 

@@ -24,8 +24,8 @@ const PageAttributes PageAttributes::DEFAULT_USER_PAGE(true, true);
 const PageAttributes PageAttributes::DEFAULT_SUPERVISOR_PAGE(true, false);
 const PageAttributes PageAttributes::NOT_PRESENT_USER_PAGE = *PageAttributes(true, true).unmark_valid();
 const PageAttributes PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE = *PageAttributes(true, false).unmark_valid();
-VMPool ** PageTable::all_vm_pools = NULL;
-unsigned long PageTable::vm_pools_count = 0;
+//VMPool ** PageTable::all_vm_pools = NULL;
+//unsigned long PageTable::vm_pools_count = 0;
 
 // just a wrapper function so that I don't write these two lines again and again
 // I hate code duplications you know
@@ -170,6 +170,8 @@ void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
 
 PageTable::PageTable()
 {
+    all_vm_pools = NULL;
+    vm_pools_count = 0;
     page_directory = (unsigned long *) get_new_frame(true);                                     // get new frame for page directory
 
     init_page_table_entries(get_pd_addr(), PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to invalid
@@ -180,7 +182,7 @@ PageTable::PageTable()
     // before direct mapping check if paging is enabled,
     // if it is load the current pd in the page table
     if(paging_enabled) {
-        Machine::disable_interrupts();
+//        Machine::disable_interrupts();
         write_cr3((unsigned long)page_directory);
     }
 
@@ -188,7 +190,7 @@ PageTable::PageTable()
 
     if(paging_enabled) {
         write_cr3((unsigned long)current_page_table->page_directory);
-        Machine::enable_interrupts();
+//        Machine::enable_interrupts();
     }
     Console::puts("Constructed Page Table object\n");                                       // we are all set. Cheers
 }
@@ -293,3 +295,11 @@ void PageTable::free_page(unsigned long _page_no)
         }
     }
 }
+
+extern "C" void load_curr_page_table(PageTable * pageTable) {
+    if(pageTable == NULL)
+        return;
+    pageTable->load();
+}
+
+

@@ -50,14 +50,14 @@ INTERRUPT_STATE_SIZE equ 68 ; size of exception frame on stack
 extern _load_curr_page_table ; defined and initialized i page_table.H
 
 %macro switch_page_table 0
-    ; Let's load the current page table into the cr3 register for the context switch
-    pushad
+	; Let's load the current page table into the cr3 register for the context switch
+	pushad
 	mov eax, _current_thread
 	mov eax, [eax+4]
 	push eax
 	mov eax, _load_curr_page_table
 	call eax
-	pop
+	pop eax
 	popad
 %endmacro
 
@@ -121,7 +121,16 @@ _threads_low_switch_to:
 	mov	[_current_thread], eax
 	mov	esp, [eax+0]
 
-    switch_page_table
+	switch_page_table
+
+        ;pushad
+        ;mov eax, _current_thread
+        ;mov eax, [eax+4]
+        ;push eax
+        ;mov eax, _load_curr_page_table
+        ;call eax
+        ;pop eax
+        ;popad
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.
@@ -141,7 +150,7 @@ _threads_low_switch_to:
 	mov	[_current_thread], eax
 	mov	esp, [eax+0]
 
-    switch_page_table
+	switch_page_table
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.

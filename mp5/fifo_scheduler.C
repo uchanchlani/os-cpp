@@ -77,7 +77,7 @@ void FIFOScheduler::terminate(Thread *_thread) {
         add(_thread);
     } else {
         int thread_id = _thread->ThreadId();
-        _thread->clean_up();
+        Thread::clean_up(_thread);
         Console::puts("Thread: ");
         Console::puti(thread_id);
         Console::puts(" finally deleted\n");
