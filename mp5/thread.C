@@ -273,3 +273,10 @@ void Thread::mark_started() {
 bool Thread::is_started() {
     return started;
 }
+
+extern "C" void load_curr_page_table(PageTable * pageTable);
+
+extern "C" void load_curr_thread_page_table(Thread * thread) {
+    load_curr_page_table(thread->getPageTable());
+}
+

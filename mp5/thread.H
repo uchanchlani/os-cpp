@@ -113,6 +113,8 @@ public:
     void mark_started();
 
     bool is_started();
+
+    PageTable * getPageTable() {return pageTable;}
 };
 
 #endif

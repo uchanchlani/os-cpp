@@ -47,21 +47,20 @@ INTERRUPT_STATE_SIZE equ 68 ; size of exception frame on stack
 	add	esp, 8	; skip int num and error code
 %endmacro
 
-extern _load_curr_page_table ; defined and initialized i page_table.H
+extern _load_curr_thread_page_table ; defined and initialized i page_table.H
+extern _current_thread  ; defined and initialized in threads.c
 
 %macro switch_page_table 0
 	; Let's load the current page table into the cr3 register for the context switch
-	pushad
-	mov eax, _current_thread
-	mov eax, [eax+4]
-	push eax
-	mov eax, _load_curr_page_table
-	call eax
-	pop eax
-	popad
+	;pushad
+	mov eax, [_current_thread] ; current thread (after the context switch), moves to eax
+	;mov eax, [eax+4] ; value in current thread + 4 is the page table pointer which now goes into the eax register
+	push eax ; push the pointer of thread as an argument for the load_curr_page_table
+	mov eax, _load_curr_thread_page_table ; we will call this function now
+	call eax ; function call
+	add esp, 4 ; discard the calling arguments
+	;popad
 %endmacro
-
-extern _current_thread  ; defined and initialized in threads.c
 
 
 global _threads_low_switch_to
