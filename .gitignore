@@ -44,3 +44,6 @@ CMakeLists.txt
 cmake-build-debug/
 
 *.elf
+
+# I use this for printing the terminal output for full scrolling and future use. 
+output
