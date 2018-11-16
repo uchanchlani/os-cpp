@@ -150,16 +150,11 @@ void PageTable::direct_map_memory(unsigned long l_addr_start, unsigned long l_ad
 }
 
 void PageTable::copy_memory(PageTable * pageTable, unsigned long size) {
-    unsigned long * curr_pd_entry;
     unsigned long * other_pd_entry;
     int pd_entry_size = 1 << 22;
     for(unsigned long dir_boundary = 0; dir_boundary < size; dir_boundary += pd_entry_size) {
-        curr_pd_entry = (unsigned long *) get_new_frame(false);
         other_pd_entry = get_pd_entry(dir_boundary, false);
-        add_frame_to_entry(get_pd_addr(), dir_boundary / pd_entry_size, (unsigned long)curr_pd_entry, PageAttributes::DEFAULT_SUPERVISOR_PAGE);// add the page table page entry in the page directory
-        for(unsigned long page_entries = 0; page_entries < 1024; ++ page_entries) {
-            curr_pd_entry[page_entries] = other_pd_entry[page_entries];
-        }
+        add_frame_to_entry(get_pd_addr(), dir_boundary / pd_entry_size, (unsigned long)other_pd_entry, PageAttributes::DEFAULT_SUPERVISOR_PAGE);
     }
 }
 
