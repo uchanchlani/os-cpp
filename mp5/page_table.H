@@ -94,8 +94,8 @@ private:
     /* DATA FOR CURRENT PAGE TABLE */
     unsigned long        * page_directory;     /* where is page directory located? */
     VMPool * heap_pool;                        /* Where is the heap memory of the current process */
-    static VMPool ** all_vm_pools;              /* list of all vm pools pointers, simplified version as compared to linked lists */
-    static unsigned long vm_pools_count;       /* this will start with 0, just saves us the hastle of traversing the list sometimes */
+    VMPool ** all_vm_pools;              /* list of all vm pools pointers, simplified version as compared to linked lists */
+    unsigned long vm_pools_count;       /* this will start with 0, just saves us the hastle of traversing the list sometimes */
     
     /*
     * Calculates the offset bits of the given size
@@ -134,6 +134,8 @@ private:
 
     // init page table entries with the given page attributes (generally will be blank page entries)
     void init_page_table_entries(unsigned long * page_table, const PageAttributes &attributes);
+    // reset page table entries with the given page attributes (generally will be blank page entries)
+    void reset_page_table_entries(unsigned long * page_table);
 
     /*
     * get the page directory entry for the given logical address
@@ -159,11 +161,11 @@ private:
 
     // Helper to get the virtual page directory address if needed
     unsigned long * get_pd_addr() {
-        if(!paging_enabled) {
+//        if(!paging_enabled) {
             return page_directory;
-        }
-        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) |
-                1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
+//        }
+//        return (unsigned long *)(1023 << (ENTRIES_OFFSET + FRAME_OFFSET) |
+//                1023 << FRAME_OFFSET); // 1 way of masking the last 2 bits
     }
 
     // Helper to get the virtual page table address if needed
@@ -196,6 +198,10 @@ public:
     /* Set the global parameters for the paging subsystem. */
     
     PageTable();
+
+    virtual ~PageTable();
+    void clear();
+//    PageTable(const PageTable& parentPageTable);
     /* Initializes a page table with a given location for the directory and the
      page table proper.
      NOTE: The PageTable object still needs to be stored somewhere!
@@ -204,7 +210,7 @@ public:
      NOTE2: It may also be simpler to create the first page table *before*
      paging has been enabled.
      */
-    
+
     void load();
     /* Makes the given page table the current table. This must be done once during
      system startup and whenever the address space is switched (e.g. during
@@ -238,6 +244,12 @@ public:
         return get_current_page_table()->get_heap();
     }
 };
+
+extern "C" void load_curr_page_table(PageTable * pageTable) {
+    if(pageTable == NULL)
+        return;
+    pageTable->load();
+}
 
 #endif
 

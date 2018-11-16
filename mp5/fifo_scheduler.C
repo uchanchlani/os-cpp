@@ -7,11 +7,6 @@
 #include "fifo_scheduler.H"
 #include "utils.H"
 
-typedef unsigned int size_t;
-extern void * operator new (size_t size);
-extern void * operator new[] (size_t size);
-extern void operator delete (void * p);
-extern void operator delete[] (void * p);
 
 Thread * FIFOScheduler::_head_thread = NULL;
 Thread * FIFOScheduler::_tail_thread = NULL;
@@ -33,7 +28,7 @@ FIFOScheduler::FIFOScheduler() : Scheduler() {
 void FIFOScheduler::yield() {
     if(!Machine::interrupts_enabled()) {
         Machine::enable_interrupts(); // trick if we need to run fifo even after the introduction of rr scheduler
-}
+    }
     context_switch();
 }
 
@@ -83,10 +78,6 @@ void FIFOScheduler::terminate(Thread *_thread) {
     } else {
         int thread_id = _thread->ThreadId();
         _thread->clean_up();
-        // We don't free up the thread pointer.
-        // The invoker of the thread may be waiting for the thread to join back and blocked on it
-        // Let that thread take over and free it in whatever way it finds suitable
-//        delete (_thread);
         Console::puts("Thread: ");
         Console::puti(thread_id);
         Console::puts(" finally deleted\n");

@@ -56,6 +56,7 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
+#include "cont_frame_pool.H"
 #include "machine.H"         /* LOW-LEVEL STUFF   */
 #include "console.H"
 #include "gdt.H"
@@ -89,23 +90,41 @@
 typedef unsigned int size_t;
 
 //replace the operator "new"
-void * operator new (size_t size) {
-    unsigned long a = PageTable::get_current_page_table_heap()->allocate((unsigned long)size);
-    return (void *)a;
+void * operator new (size_t size, ContFramePool * framePool = NULL) {
+    if(framePool == NULL) {
+        unsigned long a = PageTable::get_current_page_table_heap()->allocate((unsigned long)size);
+        return (void *)a;
+    }
+    unsigned long frame_no = framePool->get_frames((size >> 12) + (size % Machine::PAGE_SIZE == 0 ? 0 : 1));
+    if(frame_no == 0) {
+        Console::puts("Curr frame pool out of frames Not a good sign\n");
+        assert(false);
+    }
+    return (void *)(frame_no * Machine::PAGE_SIZE);
 }
 
 //replace the operator "new[]"
+//not using it as of now but the idea is the same
 void * operator new[] (size_t size) {
     unsigned long a = PageTable::get_current_page_table_heap()->allocate((unsigned long)size);
     return (void *)a;
 }
 
+bool isKernelMemory(unsigned long addr) {
+    return (addr >= 0 MB && addr < 4 MB);
+}
+
 //replace the operator "delete"
 void operator delete (void * p) {
-    PageTable::get_current_page_table_heap()->release((unsigned long)p);
+    if (isKernelMemory((unsigned long)p)) {
+        ContFramePool::release_frames(((unsigned long) p) >> PageTable::FRAME_OFFSET);
+    } else {
+        PageTable::get_current_page_table_heap()->release((unsigned long) p);
+    }
 }
 
 //replace the operator "delete[]"
+//let's not care about this as of now
 void operator delete[] (void * p) {
     PageTable::get_current_page_table_heap()->release((unsigned long)p);
 }
@@ -285,17 +304,19 @@ int main() {
 
     /* ---- INITIALIZE THE PAGE TABLE -- */
 
+    Machine::enable_interrupts();
+
     PageTable::init_paging(&kernel_mem_pool,
                            &process_mem_pool,
                            4 MB);
 
-    PageTable pt1;
+    PageTable kernel_pt;
 
-    pt1.load();
+    kernel_pt.load();
 
     PageTable::enable_paging();
 
-    VMPool heap_pool(1 GB, 256 MB, &process_mem_pool, &pt1, true);
+    VMPool heap_pool(1 GB, 256 MB, &process_mem_pool, &kernel_pt, true);
     /* -- MEMORY ALLOCATOR IS INITIALIZED. WE CAN USE new/delete! --*/
 
     /* -- INITIALIZE THE TIMER (we use a very simple timer).-- */
@@ -311,8 +332,8 @@ int main() {
 #ifdef _USES_SCHEDULER_
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
- 
-    SYSTEM_SCHEDULER = new RRScheduler();
+
+    SYSTEM_SCHEDULER = new(kernel_mem_pool) RRScheduler(); // Scheduler goes on the stack
 
 #endif
 
@@ -323,32 +344,28 @@ int main() {
 
     /* -- ENABLE INTERRUPTS -- */
 
-    Machine::enable_interrupts();
-
     /* -- MOST OF WHAT WE NEED IS SETUP. THE KERNEL CAN START. */
 
     Console::puts("Hello World!\n");
 
     /* -- LET'S CREATE SOME THREADS... */
 
+    Thread::init_threading(&kernel_mem_pool, &process_mem_pool);
+
     Console::puts("CREATING THREAD 1...\n");
-    char * stack1 = new char[1024];
-    thread1 = new Thread(fun1, stack1, 1024);
+    thread1 = new(kernel_mem_pool) Thread(fun1, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    char * stack2 = new char[1024];
-    thread2 = new Thread(fun2, stack2, 1024);
+    thread2 = new(kernel_mem_pool) Thread(fun2, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");
-    char * stack3 = new char[1024];
-    thread3 = new Thread(fun3, stack3, 1024);
+    thread3 = new(kernel_mem_pool) Thread(fun3, 1024);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 4...");
-    char * stack4 = new char[1024];
-    thread4 = new Thread(fun4, stack4, 1024);
+    thread4 = new(kernel_mem_pool) Thread(fun4, 1024);
     Console::puts("DONE\n");
 
 #ifdef _USES_SCHEDULER_

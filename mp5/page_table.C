@@ -99,6 +99,22 @@ void PageTable::init_page_table_entries(unsigned long * page_table, const PageAt
     }
 }
 
+void PageTable::reset_page_table_entries(unsigned long * page_table)
+{
+    unsigned long * curr_addr = page_table;
+    for(int i = 0; i < ENTRIES_PER_PAGE; i++) {
+        if(is_valid_entry(page_table[i])) {
+            unsigned long framePtr = get_page_entry(page_table, (unsigned long) curr_addr);
+            unset_page_entry(
+                    page_table,
+                    (unsigned long) curr_addr);
+            ContFramePool::release_frames(framePtr >> FRAME_OFFSET);
+        }
+        curr_addr++;
+    }
+    flush_tlb();
+}
+
 unsigned long * PageTable::get_pd_entry(unsigned long l_addr, bool assign)
 {
     unsigned long entry_number = l_addr >> (FRAME_OFFSET + ENTRIES_OFFSET);                                 // page table entry number
@@ -154,19 +170,56 @@ void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
 
 PageTable::PageTable()
 {
-    // Now we move the page_directory to the process pool as well
-    page_directory = (unsigned long *) get_new_frame(false);                                     // get new frame for page directory
+    page_directory = (unsigned long *) get_new_frame(true);                                     // get new frame for page directory
 
     init_page_table_entries(get_pd_addr(), PageAttributes::NOT_PRESENT_SUPERVISOR_PAGE);   // init all entries to invalid
     PageAttributes attributes = PageAttributes::DEFAULT_SUPERVISOR_PAGE;
     attributes.unmark_rw();
     add_frame_to_entry(get_pd_addr(), 1023, (unsigned long)page_directory, attributes);
 
+    // before direct mapping check if paging is enabled,
+    // if it is load the current pd in the page table
+    if(paging_enabled) {
+        Machine::disable_interrupts();
+        write_cr3((unsigned long)page_directory);
+    }
+
     direct_map_memory(0, shared_size);                                                      // do the direct mapping of the shared space
 
+    if(paging_enabled) {
+        write_cr3((unsigned long)current_page_table->page_directory);
+        Machine::enable_interrupts();
+    }
     Console::puts("Constructed Page Table object\n");                                       // we are all set. Cheers
 }
 
+PageTable::~PageTable() {
+    clear();
+}
+
+void PageTable::clear() {
+    reset_page_table_entries(get_pd_addr());
+    ContFramePool::release_frames(((unsigned long) page_directory) >> FRAME_OFFSET);
+    if(vm_pools_count > 0) {
+        ContFramePool::release_frames(((unsigned long) all_vm_pools) >> FRAME_OFFSET);
+    }
+}
+
+//PageTable::PageTable(const PageTable& parentPageTable)
+//{
+//    // Now we move the page_directory to the process pool as well
+//    page_directory = (unsigned long *) get_new_frame(false);                                     // get new frame for page directory
+//}
+//
+//void copyPage(unsigned long _page_no, const PageTable& parentPageTable, bool local_copy)
+//{
+//
+//}
+//
+//void copyPageTablePage(unsigned long _page_table_no, const PageTable& parentPageTable, bool local_copy)
+//{
+//
+//}
 
 void PageTable::load()
 {

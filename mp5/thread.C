@@ -22,6 +22,9 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
+#define GB * (0x1 << 30)
+#define MB * (0x1 << 20)
+#define KB * (0x1 << 10)
     /* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
@@ -43,7 +46,7 @@
 /*--------------------------------------------------------------------------*/
 
 typedef unsigned int size_t;
-extern void * operator new (size_t size);
+extern void * operator new (size_t size, ContFramePool * framePool = NULL);
 extern void * operator new[] (size_t size);
 extern void operator delete (void * p);
 extern void operator delete[] (void * p);
@@ -159,14 +162,23 @@ void Thread::setup_context(Thread_Function _tfunction){
     Console::puts("done\n");
 }
 
+void Thread::init_threading(ContFramePool * _kernel_mem_pool,
+                            ContFramePool * _process_mem_pool)
+{
+    kernel_mem_pool = _kernel_mem_pool;
+    process_mem_pool = _process_mem_pool;
+    Console::puts("Initialized Threading System\n");
+}
+
 /*--------------------------------------------------------------------------*/
 /* -- Thread CONSTRUCTOR -- */
 /*--------------------------------------------------------------------------*/
 
-Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
+Thread::Thread(Thread_Function _tf, unsigned int _stack_size) {
 /* Construct a new thread and initialize its stack. The thread is then ready to run.
    (The dispatcher is implemented in file "thread_scheduler".) 
 */
+    Machine::disable_interrupts();
     next = NULL;
     /* -- INITIALIZE THREAD */
 
@@ -174,14 +186,22 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
    
     thread_id = nextFreePid++;
 
+    pageTable = new(kernel_mem_pool) PageTable();
+    heapMemory = new(kernel_mem_pool) VMPool(1 GB, 256 MB, &process_mem_pool, &pageTable, true);
+
+    PageTable * prevPageTable = PageTable::get_current_page_table();
+
+    pageTable->load();
+
+    stack = new char[_stack_size];
+    stack_size = _stack_size;
+
     /* ---- STACK POINTER */
 
-    esp = (char*)((unsigned int)_stack + _stack_size);
+    esp = (char*)((unsigned int)stack + _stack_size);
     /* RECALL: The stack starts at the end of the reserved stack memory area. */
 
-    stack = _stack;
-    stack_size = _stack_size;
-    
+
     /* -- INITIALIZE THE STACK OF THE THREAD */
 
     setup_context(_tf);
@@ -190,6 +210,9 @@ Thread::Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size) {
     started = false;
 
     terminated = false;
+
+    prevPageTable->load();
+    Machine::enable_interrupts();
 }
 
 int Thread::ThreadId() {
@@ -230,11 +253,15 @@ bool Thread::is_terminated() {
     return terminated;
 }
 
-void Thread::clean_up() {
-    if(this->stack != NULL) {
-        delete (this->stack);
-    }
-    this->stack = NULL;
+void Thread::clean_up(Thread * deletedThread) {
+    PageTable * callerPageTable = PageTable::get_current_page_table();
+    deletedThread->pageTable->load();
+    delete (deletedThread->stack);
+    deletedThread->stack = NULL;
+    callerPageTable->load();
+    deletedThread->pageTable->clear();
+    delete(deletedThread->heapMemory);
+    delete(deletedThread->pageTable);
 }
 
 void Thread::mark_started() {

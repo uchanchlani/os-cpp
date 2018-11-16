@@ -114,6 +114,7 @@ protected:
 
    void set_handle_timer_interrupt() {
       handles_timer_interrupt = true;
+      interrupt_occured = false;
    }
 };
 	

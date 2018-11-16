@@ -28,6 +28,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include "machine.H"
+#include "page_table.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
@@ -46,6 +47,10 @@ private:
     char     * esp;         /* The current stack pointer for the thread.*/
                             /* Keep it at offset 0, since the thread 
                                dispatcher relies on this  location! */
+    PageTable * pageTable;  /* The page table of the current thread/process */
+                            /* Keep it at offset 1, since the thread
+                               dispatcher relies on this  location as well! */
+    VMPool * heapMemory;    /* The heap for the virtual memory of this thread */
     int        thread_id;   /* thread identifier. Assigned upon creation. */
     char     * stack;       /* pointer to the stack of the thread.*/
     unsigned int stack_size;/* size of the stack (in byte) */
@@ -59,6 +64,9 @@ private:
     bool terminated;
     bool started;
 
+    static ContFramePool * kernel_mem_pool;    /* Frame pool for the kernel memory */
+    static ContFramePool * process_mem_pool;   /* Frame pool for the process memory */
+
     void push(unsigned long _val);
     /* Push the given value on the stack of the thread. */
 
@@ -70,7 +78,10 @@ private:
 public:
     Thread * next;
 
-    Thread(Thread_Function _tf, char * _stack, unsigned int _stack_size);
+    static void init_threading(ContFramePool * _kernel_mem_pool,
+                            ContFramePool * _process_mem_pool);
+
+    Thread(Thread_Function _tf, unsigned int _stack_size);
     /* Create a thread that is set up to execute the given thread function. 
        The thread is given a pointer to the stack to use. 
        NOTE: _stack points to the beginning of the stack area, 
@@ -97,7 +108,7 @@ public:
 
     bool is_terminated();
 
-    void clean_up();
+    static void clean_up(Thread * deletedThread);
 
     void mark_started();
 
