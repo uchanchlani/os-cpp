@@ -55,7 +55,7 @@ private:
     unsigned long total_assgns;
 
     // helper value for the hash function
-    unsigned long _hash_seed;
+    static unsigned long _hash_seed;
 
     // generates a random hash value from 0 to _size (exclusive)
     unsigned long calculate_hash(unsigned long _size);

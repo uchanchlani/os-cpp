@@ -153,7 +153,7 @@ void PageTable::copy_memory(PageTable * pageTable, unsigned long size) {
     unsigned long * other_pd_entry;
     int pd_entry_size = 1 << 22;
     for(unsigned long dir_boundary = 0; dir_boundary < size; dir_boundary += pd_entry_size) {
-        other_pd_entry = get_pd_entry(dir_boundary, false);
+        other_pd_entry = pageTable->get_pd_entry(dir_boundary, false);
         add_frame_to_entry(get_pd_addr(), dir_boundary / pd_entry_size, (unsigned long)other_pd_entry, PageAttributes::DEFAULT_SUPERVISOR_PAGE);
     }
 }

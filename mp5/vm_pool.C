@@ -28,6 +28,7 @@
 /*--------------------------------------------------------------------------*/
 
 /* -- (none) -- */
+unsigned long VMPool::_hash_seed = 2147483647;
 
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
@@ -62,7 +63,7 @@ void _error_msg(const char * msg = "Error, unexpected behaviour identified\n")
 unsigned long VMPool::calculate_hash(unsigned long _size)
 {
     // with only first arg, we may get only odds or evens
-    _hash_seed = _hash_seed * _hash_seed + (_hash_seed >> 1);
+    _hash_seed = _hash_seed * _hash_seed + (_hash_seed >> 1) + 129311;
     return _hash_seed % _size;
 }
 
@@ -139,7 +140,7 @@ VMPool::VMPool(unsigned long  _base_address,
     page_table->register_pool(this, is_heap);
     total_assgns = 0;
 
-    _hash_seed = 2147483647; // some prime number
+//    _hash_seed = 2147483647; // some prime number
     assigned_frames = (unsigned long *)(start_page << PageTable::FRAME_OFFSET);
     init_pool(assigned_frames, PageTable::PAGE_SIZE / sizeof(unsigned long) / 2);
     assigned_frames[0] = start_page;
