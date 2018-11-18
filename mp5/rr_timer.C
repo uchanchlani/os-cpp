@@ -10,7 +10,9 @@ extern Scheduler * SYSTEM_SCHEDULER;
 
 void RRTimer::handle_interrupt(REGS *_r) {
     SimpleTimer::handle_interrupt(_r);
-    SYSTEM_SCHEDULER->request_handle_interrupt();
-    SYSTEM_SCHEDULER->resume(Thread::CurrentThread());
-    SYSTEM_SCHEDULER->yield();
+    if(Thread::CurrentThread() != NULL) {
+        SYSTEM_SCHEDULER->request_handle_interrupt();
+        SYSTEM_SCHEDULER->resume(Thread::CurrentThread());
+        SYSTEM_SCHEDULER->yield();
+    }
 }

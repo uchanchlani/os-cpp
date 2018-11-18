@@ -56,7 +56,6 @@
 
 class Scheduler {
 private:
-    bool handles_timer_interrupt;
     bool interrupt_occured;
 
   /* The scheduler may need private members... */
@@ -94,26 +93,25 @@ public:
 
    virtual void mark_current_thread_started();
 
-   bool is_handle_timer_interrupt() {
-      return handles_timer_interrupt;
-   }
-
+//   bool is_handle_timer_interrupt() {
+//      return handles_timer_interrupt;
+//   }
+//
    void request_handle_interrupt() {
       interrupt_occured = true;
    }
 
-protected:
    // only the rr scheduler can ask such question or clear the handled interrupt in this case
    bool is_interrupt_occured() {
       return interrupt_occured;
    }
 
+protected:
    void handled_interrupt() {
       interrupt_occured = false;
    }
 
    void set_handle_timer_interrupt() {
-      handles_timer_interrupt = true;
       interrupt_occured = false;
    }
 };
