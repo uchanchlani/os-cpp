@@ -47,7 +47,7 @@
 
 Scheduler::Scheduler() {
 //  assert(false);
-  handles_timer_interrupt = false;
+  interrupt_occured = false;
   Console::puts("Constructed Scheduler.\n");
 }
 
