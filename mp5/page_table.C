@@ -11,7 +11,7 @@
 #include "paging_low.H"
 #include "page_table.H"
 
-PageTable * PageTable::current_page_table = NULL;
+PageTable * current_page_table = NULL;
 unsigned int PageTable::paging_enabled = 0;
 ContFramePool * PageTable::kernel_mem_pool = NULL;
 ContFramePool * PageTable::process_mem_pool = NULL;
@@ -298,10 +298,14 @@ void PageTable::free_page(unsigned long _page_no)
     }
 }
 
-extern "C" void load_curr_page_table(PageTable * pageTable) {
-    if(pageTable == NULL)
-        return;
-    pageTable->load();
+PageTable * PageTable::get_current_page_table() {
+    return current_page_table;
 }
 
-
+//extern "C" void load_curr_page_table(PageTable * pageTable) {
+//    if(pageTable == NULL)
+//        return;
+//    pageTable->load();
+//}
+//
+//

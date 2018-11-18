@@ -85,7 +85,7 @@ class PageTable {
 private:
     
     /* THESE MEMBERS ARE COMMON TO ENTIRE PAGING SUBSYSTEM */
-    static PageTable     * current_page_table; /* pointer to currently loaded page table object */
+//    static PageTable     * current_page_table; /* pointer to currently loaded page table object */
     static unsigned int    paging_enabled;     /* is paging turned on (i.e. are addresses logical)? */
     static ContFramePool * kernel_mem_pool;    /* Frame pool for the kernel memory */
     static ContFramePool * process_mem_pool;   /* Frame pool for the process memory */
@@ -181,7 +181,7 @@ private:
 
     // util function for flushing the tlb
     static void flush_tlb() {
-        write_cr3((unsigned long)current_page_table->page_directory);
+        write_cr3((unsigned long)get_current_page_table()->page_directory);
     }
 
 public:
@@ -237,9 +237,7 @@ public:
         return this->heap_pool;
     }
 
-    static PageTable * get_current_page_table() {
-        return current_page_table;
-    }
+    static PageTable * get_current_page_table();
 
     static VMPool * get_current_page_table_heap() {
         return get_current_page_table()->get_heap();
