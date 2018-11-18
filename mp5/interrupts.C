@@ -137,7 +137,7 @@ void InterruptHandler::dispatch_interrupt(REGS * _r) {
        to send and end-of-interrupt (EOI) signal to the controller after the 
        interrupt has been handled. */
 
-  if(int_no == 0 && !SYSTEM_SCHEDULER->is_handle_timer_interrupt()) {
+  if(int_no == 0 && SYSTEM_SCHEDULER->is_handle_timer_interrupt()) {
     return;
   }
   end_of_interrupt(int_no);

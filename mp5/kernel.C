@@ -325,10 +325,6 @@ int main() {
                  we enable interrupts correctly. If we forget to do it,
                  the timer "dies". */
 
-    RRTimer timer(20); /* timer ticks every 10ms. */
-    InterruptHandler::register_handler(0, &timer);
-    /* The Timer is implemented as an interrupt handler. */
-
 #ifdef _USES_SCHEDULER_
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
@@ -336,6 +332,10 @@ int main() {
     SYSTEM_SCHEDULER = new(&kernel_mem_pool) RRScheduler(); // Scheduler goes on the stack
 
 #endif
+
+    RRTimer timer(20); /* timer ticks every 10ms. */
+    InterruptHandler::register_handler(0, &timer);
+    /* The Timer is implemented as an interrupt handler. */
 
     /* NOTE: The timer chip starts periodically firing as
              soon as we enable interrupts.
