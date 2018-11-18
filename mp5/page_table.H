@@ -200,7 +200,7 @@ public:
     
     PageTable();
 
-    virtual ~PageTable();
+    ~PageTable();
     void clear();
 //    PageTable(const PageTable& parentPageTable);
     /* Initializes a page table with a given location for the directory and the

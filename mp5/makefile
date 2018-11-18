@@ -80,7 +80,7 @@ vm_pool.o: vm_pool.C vm_pool.H
 # ==== THREADS & SCHEDULING =====
 
 threads_low.o: threads_low.asm threads_low.H
-	nasm -f aout -o threads_low.o threads_low.asm
+	nasm -f elf -l threads_low.lst -g -o threads_low.o threads_low.asm
 
 thread.o: thread.C thread.H threads_low.H
 	$(CPP) $(CPP_OPTIONS) -c -o thread.o thread.C

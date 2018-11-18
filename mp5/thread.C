@@ -256,6 +256,7 @@ bool Thread::is_terminated() {
 }
 
 void Thread::clean_up(Thread * deletedThread) {
+    return;
     PageTable * callerPageTable = PageTable::get_current_page_table();
     deletedThread->pageTable->load();
     delete (deletedThread->stack);
@@ -274,9 +275,9 @@ bool Thread::is_started() {
     return started;
 }
 
-extern "C" void load_curr_page_table(PageTable * pageTable);
-
-extern "C" void load_curr_thread_page_table(Thread * thread) {
-    load_curr_page_table(thread->getPageTable());
-}
+//extern "C" void load_curr_page_table(PageTable * pageTable);
+//
+//extern "C" void load_curr_thread_page_table(Thread * thread) {
+//    load_curr_page_table(thread->getPageTable());
+//}
 

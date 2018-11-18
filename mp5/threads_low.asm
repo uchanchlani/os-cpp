@@ -53,9 +53,10 @@ extern _current_thread  ; defined and initialized in threads.c
 %macro switch_page_table 0
 	; Let's load the current page table into the cr3 register for the context switch
 	;pushad
-	mov eax, [_current_thread+4] ; current thread (after the context switch), moves to eax
+	mov eax, _current_thread ; current thread (after the context switch), moves to eax
+	mov eax, [eax+4]
 	mov [_current_page_table], eax
-	mov eax, [_current_page_table]
+	mov eax, [eax+0]
 	mov cr3, eax
 	;mov eax, [eax+4] ; value in current thread + 4 is the page table pointer which now goes into the eax register
 	;push eax ; push the pointer of thread as an argument for the load_curr_page_table
@@ -121,9 +122,17 @@ _threads_low_switch_to:
 
 	; Make the new thread current, and switch to its stack.
 	mov	[_current_thread], eax
-	mov	esp, [eax+0]
+	mov	ebx, [eax+0]
+	;mov	esp, [eax+0]
 
-	switch_page_table
+        ;switch_page_table
+        ;mov eax, _current_thread ; current thread (after the context switch), $
+        mov eax, [eax+4]
+        mov [_current_page_table], eax
+        mov eax, [eax+0]
+        mov cr3, eax
+
+	mov esp, ebx
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.
@@ -141,9 +150,17 @@ _threads_low_switch_to:
 
 	; Make the new thread current, and switch to its stack.
 	mov	[_current_thread], eax
-	mov	esp, [eax+0]
+	mov	ebx, [eax+0]
+	;mov	esp, [eax+0]
 
-	switch_page_table
+	;switch_page_table
+        ;mov eax, _current_thread ; current thread (after the context switch), m$
+        mov eax, [eax+4]
+        mov [_current_page_table], eax
+        mov eax, [eax+0]
+        mov cr3, eax
+
+	mov	esp, ebx
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.
