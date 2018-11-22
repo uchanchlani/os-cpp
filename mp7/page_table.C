@@ -231,6 +231,7 @@ void PageTable::free_page(unsigned long _page_no)
             unset_page_entry(
                     get_pt_addr(free_addr),
                     free_addr);
+            ContFramePool::release_frames(framePtr >> FRAME_OFFSET);
             flush_tlb();
             Console::puts("freed page\n");
         }

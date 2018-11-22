@@ -94,7 +94,7 @@ bool VMPool::check_feasible_assgn(unsigned long _start_page, unsigned long _num_
         if(assigned_frames[2*i] == FREE_SPACE) {
             continue;
         }
-        unsigned long start = assigned_frames[2*1], end = assigned_frames[2*i + 1];
+        unsigned long start = assigned_frames[2*i], end = assigned_frames[2*i + 1];
         if(is_overlap(start, end, _start_page, _start_page + _num_pages)) { // if there is an overlap we return false because this candidate is invalid now
             return false;
         }
