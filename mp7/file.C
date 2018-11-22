@@ -45,7 +45,7 @@ File::File(unsigned short _startBlock, unsigned char * _blockBuf, FileSystem * _
 
 int File::Read(unsigned int _n, char * _buf) {
     Console::puts("reading from file\n");
-    if(readMode ^ writeMode) {
+    if(!(readMode ^ writeMode)) {
         readMode = true;
         writeMode = false;
     } else if (!readMode) {
@@ -72,18 +72,19 @@ int File::Read(unsigned int _n, char * _buf) {
             }
         }
     }
+    return charRead;
 }
 
 
 void File::Write(unsigned int _n, const char * _buf) {
     Console::puts("writing to file\n");
-    if(readMode ^ writeMode) {
+    if(!(readMode ^ writeMode)) {
         readMode = false;
         writeMode = true;
     } else if (!writeMode) {
         Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n");
     }
-    if(_n == 0 || blockBuf[offset % 510] == 0)
+    if(_n == 0)
         return;
     unsigned int charRead = 0;
     while(_n > 0) {
@@ -112,7 +113,7 @@ void File::Reset() {
 
 void File::Rewrite() {
     Console::puts("erase content of file\n");
-    if(readMode ^ writeMode) {
+    if(!(readMode ^ writeMode)) {
         readMode = false;
         writeMode = true;
     } else if (!writeMode) {
@@ -123,10 +124,10 @@ void File::Rewrite() {
     if(isStale)
         fileSystem->disk->read(blockNum, blockBuf);
     blockBuf[0] = 0;
-    if(getNextBlock() != 0) {
+//    if(getNextBlock() != 0) {
         setNextBlock(0);
         flushBlock();
-    }
+//    }
 }
 
 
@@ -155,7 +156,7 @@ void File::resetFileBits(unsigned char *buf) {
 }
 
 void File::flushBlock() {
-    fileSystem->disk->write((unsigned long)blockBuf, blockBuf);
+    fileSystem->disk->write((unsigned long)blockNum, blockBuf);
 }
 
 bool File::returnBlocks(bool keepFirst) {

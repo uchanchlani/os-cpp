@@ -111,7 +111,7 @@ unsigned short FileSystem::getFreeBlock(unsigned char * usableBuf) {
 
 bool FileSystem::returnFreeBlock(unsigned char * usableBuf, unsigned short * block_nums, unsigned long size) {
     while (size > 0) {
-        for (unsigned short i = 1; i < FREE_BLOCKS_COUNT; i++ && size > 0) {
+        for (unsigned short i = 1; i < FREE_BLOCKS_COUNT && size > 0; i++) {
             if (free_blocks[i] == 0) {
                 free_blocks[i] = *block_nums;
                 size--;
