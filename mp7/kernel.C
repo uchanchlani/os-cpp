@@ -369,7 +369,14 @@ int main() {
     pt1.load();
 
     PageTable::enable_paging();
-    
+
+    VMPool code_pool(512 MB, 256 MB, &process_mem_pool, &pt1);
+    VMPool heap_pool(1 GB, 256 MB, &process_mem_pool, &pt1);
+
+    /* -- NOW THE POOLS HAVE BEEN CREATED. */
+
+    Console::puts("VM Pools successfully created!\n");
+
     /* -- INITIALIZE THE TIMER (we use a very simple timer).-- */
 
     /* Question: Why do we want a timer? We have it to make sure that 
