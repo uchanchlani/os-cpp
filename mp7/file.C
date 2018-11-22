@@ -49,7 +49,7 @@ int File::Read(unsigned int _n, char * _buf) {
         readMode = true;
         writeMode = false;
     } else if (!readMode) {
-        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n")
+        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n");
         return 0;
     }
     if(_n == 0 || blockBuf[offset % 510] == 0)
@@ -81,7 +81,7 @@ void File::Write(unsigned int _n, const char * _buf) {
         readMode = false;
         writeMode = true;
     } else if (!writeMode) {
-        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n")
+        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n");
     }
     if(_n == 0 || blockBuf[offset % 510] == 0)
         return;
@@ -116,7 +116,7 @@ void File::Rewrite() {
         readMode = false;
         writeMode = true;
     } else if (!writeMode) {
-        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n")
+        Console::puts("Please don't write and read on the file simultaneously. It is not good you know.\n");
     }
     bool isStale = returnBlocks(true);
     blockNum = startBlock;

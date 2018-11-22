@@ -26,7 +26,7 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-#include "file.H"
+//#include "file.H"
 #include "simple_disk.H"
 
 /*--------------------------------------------------------------------------*/
@@ -39,7 +39,7 @@
 /* FORWARD DECLARATIONS */ 
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+class File;
 
 /*--------------------------------------------------------------------------*/
 /* F i l e S y s t e m  */
@@ -102,7 +102,7 @@ private:
      FileSystemMeta meta;
      bool isValid;
 
-     static unsigned long FS_SIGNATURE = 282732341;
+     static unsigned long FS_SIGNATURE;
 
      void readMeta(unsigned char * usableBuf);
      void updateMeta(unsigned char * usableBuf);

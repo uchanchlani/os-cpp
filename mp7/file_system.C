@@ -25,11 +25,13 @@ extern void operator delete[] (void * p);
 #include "assert.H"
 #include "console.H"
 #include "file_system.H"
-
+#include "file.H"
 
 /*--------------------------------------------------------------------------*/
 /* CONSTRUCTOR */
 /*--------------------------------------------------------------------------*/
+
+unsigned long FileSystem::FS_SIGNATURE = 282732341;
 
 FileSystem::FileSystem() {
     disk = NULL;
@@ -153,7 +155,7 @@ void FileSystem::clearINodes() {
 
 bool FileSystem::Mount(SimpleDisk * _disk) {
     disk = _disk;
-    unsigned char[512] buf;
+    unsigned char buf[512];
     readMeta(buf);
     if(!this->isValid) {
         return false;

@@ -32,7 +32,7 @@
 /*--------------------------------------------------------------------------*/
 /* class  F i l e   */
 #include "file_system.H"
-
+class FileSystem;
 /*--------------------------------------------------------------------------*/
 
 class File  {
@@ -41,7 +41,7 @@ private:
     unsigned short startBlock;
     unsigned long offset;
     // we will not read the file again and again. Read it once and keep the buffer handy
-    unsigned char[512] blockBuf;
+    unsigned char blockBuf[512];
     unsigned short blockNum;
     bool readMode;
     bool writeMode;
