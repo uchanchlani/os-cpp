@@ -26,8 +26,18 @@
    other in a co-routine fashion.
 */
 
+#define GB * (0x1 << 30)
 #define MB * (0x1 << 20)
 #define KB * (0x1 << 10)
+#define KERNEL_POOL_START_FRAME ((2 MB) / Machine::PAGE_SIZE)
+#define KERNEL_POOL_SIZE ((2 MB) / Machine::PAGE_SIZE)
+#define PROCESS_POOL_START_FRAME ((4 MB) / Machine::PAGE_SIZE)
+#define PROCESS_POOL_SIZE ((28 MB) / Machine::PAGE_SIZE)
+/* definition of the kernel and process memory pools */
+
+#define MEM_HOLE_START_FRAME ((15 MB) / Machine::PAGE_SIZE)
+#define MEM_HOLE_SIZE ((1 MB) / Machine::PAGE_SIZE)
+/* we have a 1 MB hole in physical memory starting at address 15 MB */
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
@@ -336,7 +346,7 @@ int main() {
     /* ---- INSTALL PAGE FAULT HANDLER -- */
 
     class PageFault_Handler : public ExceptionHandler {
-        /* We derive the page fault handler from ExceptionHandler 
+        /* We derive the page fault handler from ExceptionHandler
        and overload the method handle_exception. */
     public:
         virtual void handle_exception(REGS * _regs) {
