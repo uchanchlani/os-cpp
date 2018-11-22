@@ -192,6 +192,7 @@ bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) {
             tempFileSystem.meta.size_in_blocks - tempFileSystem.meta.start_data_block);
 
     tempFileSystem.updateMeta(buf);
+    delete[] allBlocks;
     return true;
 }
 

@@ -19,7 +19,7 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-//#define _USES_SCHEDULER_
+#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use 
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each 
@@ -33,6 +33,8 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
+#include "page_table.H"
+#include "vm_pool.H"
 #include "machine.H"         /* LOW-LEVEL STUFF   */
 #include "console.H"
 #include "gdt.H"
@@ -43,16 +45,15 @@
 
 #include "simple_timer.H"    /* TIMER MANAGEMENT  */
 
-#include "frame_pool.H"      /* MEMORY MANAGEMENT */
-#include "mem_pool.H"
-
 #include "thread.H"         /* THREAD MANAGEMENT */
 
 #ifdef _USES_SCHEDULER_
 #include "scheduler.H"       /* WE MAY NEED A SCHEDULER IF WE USE BlockingDisk */
+#include "fifo_scheduler.H"       /* WE MAY NEED A SCHEDULER IF WE USE BlockingDisk */
 #endif
 
 #include "simple_disk.H"     /* DISK DEVICE */
+#include "blocking_disk.H"
 
 #include "file_system.H"     /* FILE SYSTEM */
 #include "file.H"
@@ -61,35 +62,32 @@
 /* MEMORY MANAGEMENT */
 /*--------------------------------------------------------------------------*/
 
-/* -- A POOL OF FRAMES FOR THE SYSTEM TO USE */
-FramePool * SYSTEM_FRAME_POOL;
-
-/* -- A POOL OF CONTIGUOUS MEMORY FOR THE SYSTEM TO USE */
-MemPool * MEMORY_POOL;
+VMPool *current_pool;
 
 typedef unsigned int size_t;
 
 //replace the operator "new"
 void * operator new (size_t size) {
-    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
+    unsigned long a = current_pool->allocate((unsigned long)size);
     return (void *)a;
 }
 
 //replace the operator "new[]"
 void * operator new[] (size_t size) {
-    unsigned long a = MEMORY_POOL->allocate((unsigned long)size);
+    unsigned long a = current_pool->allocate((unsigned long)size);
     return (void *)a;
 }
 
 //replace the operator "delete"
 void operator delete (void * p) {
-    MEMORY_POOL->release((unsigned long)p);
+    current_pool->release((unsigned long)p);
 }
 
 //replace the operator "delete[]"
 void operator delete[] (void * p) {
-    MEMORY_POOL->release((unsigned long)p);
+    current_pool->release((unsigned long)p);
 }
+
 
 /*--------------------------------------------------------------------------*/
 /* SCHEDULER */
@@ -314,19 +312,53 @@ int main() {
     ExceptionHandler::register_handler(0, &dbz_handler);
 
     /* -- INITIALIZE MEMORY -- */
-    /*    NOTE: We don't have paging enabled in this MP. */
-    /*    NOTE2: This is not an exercise in memory management. The implementation
-                of the memory management is accordingly *very* primitive! */
+    ContFramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
+                                  KERNEL_POOL_SIZE,
+                                  0,
+                                  0);
 
-    /* ---- Initialize a frame pool; details are in its implementation */
-    FramePool system_frame_pool;
-    SYSTEM_FRAME_POOL = &system_frame_pool;
-   
-    /* ---- Create a memory pool of 256 frames. */
-    MemPool memory_pool(SYSTEM_FRAME_POOL, 256);
-    MEMORY_POOL = &memory_pool;
+    unsigned long n_info_frames =
+            ContFramePool::needed_info_frames(PROCESS_POOL_SIZE);
 
-    /* -- MEMORY ALLOCATOR SET UP. WE CAN NOW USE NEW/DELETE! -- */
+    unsigned long process_mem_pool_info_frame =
+            kernel_mem_pool.get_frames(n_info_frames);
+
+    ContFramePool process_mem_pool(PROCESS_POOL_START_FRAME,
+                                   PROCESS_POOL_SIZE,
+                                   process_mem_pool_info_frame,
+                                   n_info_frames);
+
+    /* Take care of the hole in the memory. */
+    process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
+
+    /* -- INITIALIZE MEMORY (PAGING) -- */
+
+    /* ---- INSTALL PAGE FAULT HANDLER -- */
+
+    class PageFault_Handler : public ExceptionHandler {
+        /* We derive the page fault handler from ExceptionHandler 
+       and overload the method handle_exception. */
+    public:
+        virtual void handle_exception(REGS * _regs) {
+            PageTable::handle_fault(_regs);
+        }
+    } pagefault_handler;
+
+    /* ---- Register the page fault handler for exception no. 14
+            with the exception dispatcher. */
+    ExceptionHandler::register_handler(14, &pagefault_handler);
+
+    /* ---- INITIALIZE THE PAGE TABLE -- */
+
+    PageTable::init_paging(&kernel_mem_pool,
+                           &process_mem_pool,
+                           4 MB);
+
+    PageTable pt1;
+
+    pt1.load();
+
+    PageTable::enable_paging();
     
     /* -- INITIALIZE THE TIMER (we use a very simple timer).-- */
 
@@ -342,13 +374,13 @@ int main() {
 
     /* -- SCHEDULER -- IF YOU HAVE ONE -- */
   
-    SYSTEM_SCHEDULER = new Scheduler();
+    SYSTEM_SCHEDULER = new FIFOScheduler();
     
 #endif
 
     /* -- DISK DEVICE -- */
 
-    SYSTEM_DISK = new SimpleDisk(MASTER, SYSTEM_DISK_SIZE);
+    SYSTEM_DISK = new BlockingDisk(MASTER, SYSTEM_DISK_SIZE);
     FILE_SYSTEM = new FileSystem();
     
     /* NOTE: The timer chip starts periodically firing as 
