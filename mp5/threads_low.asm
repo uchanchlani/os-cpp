@@ -122,8 +122,8 @@ _threads_low_switch_to:
 
 	; Make the new thread current, and switch to its stack.
 	mov	[_current_thread], eax
-	mov	ebx, [eax+0]
-	;mov	esp, [eax+0]
+	;mov	ebx, [eax+0]
+	mov	esp, [eax+0]
 
         ;switch_page_table
         ;mov eax, _current_thread ; current thread (after the context switch), $
@@ -132,7 +132,7 @@ _threads_low_switch_to:
         mov eax, [eax+0]
         mov cr3, eax
 
-	mov esp, ebx
+	;mov esp, ebx
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.
@@ -150,8 +150,8 @@ _threads_low_switch_to:
 
 	; Make the new thread current, and switch to its stack.
 	mov	[_current_thread], eax
-	mov	ebx, [eax+0]
-	;mov	esp, [eax+0]
+	;mov	ebx, [eax+0]
+	mov	esp, [eax+0]
 
 	;switch_page_table
         ;mov eax, _current_thread ; current thread (after the context switch), m$
@@ -160,7 +160,7 @@ _threads_low_switch_to:
         mov eax, [eax+0]
         mov cr3, eax
 
-	mov	esp, ebx
+	;mov	esp, ebx
 
 	; Restore general purpose and segment registers, and clear interrupt
 	; number and error code.
