@@ -18,6 +18,8 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
+#define FREE_BLOCKS_COUNT 256
+#define INODES_COUNT 127
 /* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
@@ -43,16 +45,80 @@
 /* F i l e S y s t e m  */
 /*--------------------------------------------------------------------------*/
 
+struct INode {
+    unsigned char fileName;
+    unsigned short startBlock;
+};
+
+struct FileSystemMeta {
+    unsigned short freeListBlock;
+    unsigned short iNodeListBlock;
+    /*
+     * size in blocks is the total number of blocks that we have in the system disk
+     */
+    unsigned short size_in_blocks;
+    unsigned long signature;
+    unsigned long start_data_block;
+};
+
 class FileSystem {
 
 friend class File; /* -- not sure if we need this; feel free to delete */
 
 private:
      /* -- DEFINE YOUR FILE SYSTEM DATA STRUCTURES HERE. */
-     
+
+     /*
+      * I have made the file system data structure bulky by adding every buffer as a non dynamic data structure.
+      * This is okay because we will have very limited file systems in our running system.
+      *
+      * Also I have restricted the number of blocks that we can have in our disk to 2^16 (2 bytes storable).
+      * this means we can support a disk of upto 2^25 bytes which is 32 MB.
+      */
+
      SimpleDisk * disk;
-     unsigned int size;
-     
+
+     /*
+      * free blocks stores the list of free blocks in the system. 1-255 entries stores a list of some free blocks.
+      * The 0th entry stores the pointer to one more free block which is used as a block to store other free blocks
+      * And the cycle goes on.
+      * We store the base free blocks list in block 0
+      */
+     unsigned short free_blocks[FREE_BLOCKS_COUNT];
+     /*
+      * inodes stores things a bit smartly
+      * It uses 3 bytes to store the name of the file in 1 byte
+      * and start address of the file in the next 2 bytes.
+      * Thus we allow a total of 255 different file names for the file system (0 is a reserved name and cannot be used)
+      * And we allow at max 170 files to be present in our vanilla version of the file system
+      * We store this free blocks in block 1
+      *
+      * Now when we read the disk we need to know that weather it has a valid file system or not.
+      * To do that we store some signature value in the last 2 bytes of the block 1 of the disk.
+      * If we read that signature value we load the file system else we mark this as invalid file system.
+      */
+     INode inodes[INODES_COUNT];
+
+     FileSystemMeta meta;
+     bool isValid;
+
+     static unsigned long FS_SIGNATURE = 282732341;
+
+     void readMeta(unsigned char * usableBuf);
+     void updateMeta(unsigned char * usableBuf);
+
+     unsigned short getFreeBlock(unsigned char * usableBuf);
+     bool returnFreeBlock(unsigned char * usableBuf, unsigned short * block_nums, unsigned long size);
+     void refreshFreeBlocks();
+     void updateFreeBlocksToDisk(unsigned char * usableBuf);
+     void updateFreeBlocksFromBuf(unsigned char * buf);
+     void castFreeBlockToBuf(unsigned char * buf);
+
+     void clearINodes();
+     void updateINodesToDisk(unsigned char * usableBuf);
+     void updateINodesFromBuf(unsigned char * buf);
+     void castINodesToBuf(unsigned char * buf);
+
 public:
 
     FileSystem();

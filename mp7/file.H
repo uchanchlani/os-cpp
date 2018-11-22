@@ -31,19 +31,37 @@
 
 /*--------------------------------------------------------------------------*/
 /* class  F i l e   */
+#include "file_system.H"
+
 /*--------------------------------------------------------------------------*/
 
 class File  {
-    
+    friend class FileSystem;
 private:
+    unsigned short startBlock;
+    unsigned long offset;
+    // we will not read the file again and again. Read it once and keep the buffer handy
+    unsigned char[512] blockBuf;
+    unsigned short blockNum;
+    bool readMode;
+    bool writeMode;
+
     /* -- your file data structures here ... */
-    
+
+    FileSystem * fileSystem;
     /* -- maybe it would be good to have a reference to the file system? */
+
+    void generateNewEmptyBlock();
+    void flushBlock();
+    bool returnBlocks(bool keepFirst);
+    unsigned short getNextBlock();
+    void setNextBlock(unsigned short _blockNum);
+
+    static void resetFileBits(unsigned char * buf);
     
 public:
 
-    File(/* you may need arguments here; maybe a pointer to the disk block
-          containing file management and file allocation data */);
+    File(unsigned short startBlock, unsigned char * startBuf, FileSystem * _fileSystem);
     /* Constructor for the file handle. Set the ’current
      position’ to be at the beginning of the file. */
     
