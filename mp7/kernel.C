@@ -233,7 +233,7 @@ void fun1() {
        Console::puts("FUN 1 IN ITERATION["); Console::puti(j); Console::puts("]\n");
 
         for (int i = 0; i < 10; i++) {
-           Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
+//           Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
        }
 
         /* -- Give up the CPU */
@@ -251,7 +251,7 @@ void fun2() {
        Console::puts("FUN 2 IN ITERATION["); Console::puti(j); Console::puts("]\n");
 
        for (int i = 0; i < 10; i++) {
-           Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
+//           Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
        }
         
        /* -- Give up the CPU */
@@ -273,6 +273,7 @@ void fun3() {
         Console::puts("FUN 3 IN BURST["); Console::puti(j); Console::puts("]\n");
         
         exercise_file_system(FILE_SYSTEM);
+        Console::puts("Successful. File Test completed\n");
         
         /* -- Give up the CPU */
         pass_on_CPU(thread4);
@@ -288,7 +289,7 @@ void fun4() {
        Console::puts("FUN 4 IN BURST["); Console::puti(j); Console::puts("]\n");
 
        for (int i = 0; i < 10; i++) {
-           Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
+//           Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
        }
 
         /* -- Give up the CPU */
@@ -417,23 +418,23 @@ int main() {
     /* -- LET'S CREATE SOME THREADS... */
 
     Console::puts("CREATING THREAD 1...\n");
-    char * stack1 = new char[1024];
-    thread1 = new Thread(fun1, stack1, 1024);
+    char * stack1 = new char[4096];
+    thread1 = new Thread(fun1, stack1, 4096);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    char * stack2 = new char[1024];
-    thread2 = new Thread(fun2, stack2, 1024);
+    char * stack2 = new char[4096];
+    thread2 = new Thread(fun2, stack2, 4096);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");
-    char * stack3 = new char[1024];
-    thread3 = new Thread(fun3, stack3, 1024);
+    char * stack3 = new char[4096];
+    thread3 = new Thread(fun3, stack3, 4096);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 4...");
-    char * stack4 = new char[1024];
-    thread4 = new Thread(fun4, stack4, 1024);
+    char * stack4 = new char[4096];
+    thread4 = new Thread(fun4, stack4, 4096);
     Console::puts("DONE\n");
 
 #ifdef _USES_SCHEDULER_

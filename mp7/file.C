@@ -37,6 +37,8 @@ File::File(unsigned short _startBlock, unsigned char * _blockBuf, FileSystem * _
     for(unsigned short i = 0; i < 512; i++) {
         blockBuf[i] = _blockBuf[i];
     }
+    readMode = false;
+    writeMode = false;
 }
 
 /*--------------------------------------------------------------------------*/
