@@ -57,6 +57,10 @@ struct FileSystemMeta {
      * size in blocks is the total number of blocks that we have in the system disk
      */
     unsigned short size_in_blocks;
+    /*
+     * Validated this signature with the signature present in the data structure.
+     * Chances of these 32 bits being exactly the same as the signature is very rare
+     */
     unsigned long signature;
     unsigned long start_data_block;
 };
@@ -103,6 +107,12 @@ private:
      bool isValid;
 
      static unsigned long FS_SIGNATURE;
+
+     /*
+      * You will encounter this usableBuf in the entire file.
+      * This is basically the memory location of the start of a 512 bytes buffer which can be used in whatever the function wants to
+      * It is generally used to interact with the disk
+      */
 
      void readMeta(unsigned char * usableBuf);
      void updateMeta(unsigned char * usableBuf);

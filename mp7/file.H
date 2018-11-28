@@ -46,8 +46,6 @@ private:
     bool readMode;
     bool writeMode;
 
-    /* -- your file data structures here ... */
-
     FileSystem * fileSystem;
     /* -- maybe it would be good to have a reference to the file system? */
 

@@ -42,6 +42,9 @@ FileSystem::FileSystem() {
 /* FILE SYSTEM FUNCTIONS */
 /*--------------------------------------------------------------------------*/
 
+/*
+ * Read the meta info from the file system. A blocking call
+ */
 void FileSystem::readMeta(unsigned char *usableBuf) {
     this->disk->read(0, usableBuf);
     FileSystemMeta * _meta = (FileSystemMeta *) usableBuf;
@@ -60,6 +63,9 @@ void FileSystem::updateMeta(unsigned char *usableBuf) {
     this->disk->write(0, usableBuf);
 }
 
+/*
+ * Convert the pointer to chars into pointer to free blocks
+ */
 void FileSystem::updateFreeBlocksFromBuf(unsigned char * buf) {
     unsigned short * _free_blocks = (unsigned short *) buf;
     for(unsigned short i = 0; i < FREE_BLOCKS_COUNT; i++) {
@@ -67,6 +73,9 @@ void FileSystem::updateFreeBlocksFromBuf(unsigned char * buf) {
     }
 }
 
+/*
+ * Convert into pointer to chars from pointer to free blocks
+ */
 void FileSystem::castFreeBlockToBuf(unsigned char *buf) {
     unsigned char * _buf = (unsigned char *) free_blocks;
     for(unsigned short i = 0; i < FREE_BLOCKS_COUNT * sizeof(unsigned short); i++) {
@@ -74,6 +83,9 @@ void FileSystem::castFreeBlockToBuf(unsigned char *buf) {
     }
 }
 
+/*
+ * Convert the pointer to chars into pointer to inodes
+ */
 void FileSystem::updateINodesFromBuf(unsigned char *buf) {
     INode * _inodes = (INode *) buf;
     for(unsigned short i = 0; i < INODES_COUNT; i++) {
@@ -82,6 +94,9 @@ void FileSystem::updateINodesFromBuf(unsigned char *buf) {
     }
 }
 
+/*
+ * Convert into pointer to chars from pointer to inodes
+ */
 void FileSystem::castINodesToBuf(unsigned char *buf) {
     unsigned char * _buf = (unsigned char *) inodes;
     for(unsigned short i = 0; i < INODES_COUNT * sizeof(INode); i++) {
@@ -89,6 +104,9 @@ void FileSystem::castINodesToBuf(unsigned char *buf) {
     }
 }
 
+/*
+ * Get the next available free block
+ */
 unsigned short FileSystem::getFreeBlock(unsigned char * usableBuf) {
     for(unsigned short i = FREE_BLOCKS_COUNT - 1; i > 0; i--) {
         if(free_blocks[i] != 0) {
@@ -109,6 +127,9 @@ unsigned short FileSystem::getFreeBlock(unsigned char * usableBuf) {
     }
 }
 
+/*
+ * return the free block
+ */
 bool FileSystem::returnFreeBlock(unsigned char * usableBuf, unsigned short * block_nums, unsigned long size) {
     while (size > 0) {
         for (unsigned short i = 1; i < FREE_BLOCKS_COUNT && size > 0; i++) {
@@ -131,28 +152,45 @@ bool FileSystem::returnFreeBlock(unsigned char * usableBuf, unsigned short * blo
     return true;
 }
 
+/*
+ * Pure blocking call to update the free block datastructure to disk
+ */
 void FileSystem::updateFreeBlocksToDisk(unsigned char * usableBuf) {
     castFreeBlockToBuf(usableBuf);
     this->disk->write(this->meta.freeListBlock, usableBuf);
 }
 
+/*
+ * Pure blocking call to update the inodess block datastructure to disk
+ */
 void FileSystem::updateINodesToDisk(unsigned char * usableBuf) {
     castINodesToBuf(usableBuf);
     this->disk->write(this->meta.iNodeListBlock, usableBuf);
 }
 
+/*
+ * reset functionality
+ */
 void FileSystem::refreshFreeBlocks() {
     for(unsigned short i = 0; i < FREE_BLOCKS_COUNT; i++) {
         free_blocks[i] = 0;
     }
 }
 
+/*
+ * reset functionality
+ */
 void FileSystem::clearINodes() {
     for(unsigned short i = 0; i < INODES_COUNT; i++) {
         inodes[i].fileName = 0;
     }
 }
 
+// Public functions
+
+/*
+ * We read the file system from disk and check if it valid or not. we return if the file system is successfully mounted
+ */
 bool FileSystem::Mount(SimpleDisk * _disk) {
     disk = _disk;
     unsigned char buf[512];
@@ -168,6 +206,9 @@ bool FileSystem::Mount(SimpleDisk * _disk) {
     return true;
 }
 
+/*
+ * Load my file system into the disk. and make it valid.
+ */
 bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) {
     Console::puts("formatting disk\n");
     unsigned char buf[512];
@@ -196,6 +237,9 @@ bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) {
     return true;
 }
 
+/*
+ * looks up the inodes for the file. If found we allocate the file pointer to it else return null
+ */
 File * FileSystem::LookupFile(int _file_id) {
     Console::puts("looking up file\n");
     if (!isValid) return NULL;
@@ -209,6 +253,10 @@ File * FileSystem::LookupFile(int _file_id) {
     return NULL;
 }
 
+/*
+ * looks up the inodes for the file. If found we return null
+ * else we create the file
+ */
 bool FileSystem::CreateFile(int _file_id) {
     Console::puts("creating file\n");
     unsigned char tempBuf[512];
@@ -233,6 +281,10 @@ bool FileSystem::CreateFile(int _file_id) {
     return false;
 }
 
+/*
+ * looks up the inodes for the file. If not found we return null
+ * else we return all file blocks and update the inodes to delete the file
+ */
 bool FileSystem::DeleteFile(int _file_id) {
     Console::puts("deleting file\n");
     unsigned char tempBuf[512];
